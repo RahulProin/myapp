@@ -17,14 +17,11 @@ import {
   Type,
   HelpCircle,
   Link,
-  SplitSquareVertical,
-  Pencil,
-  CheckCircle2,
-  List,
-  Clock as ClockIcon,
-  BookOpen as BookOpenIcon,
-  Book as BookIcon,
-  XCircle
+  ChevronLeft,
+  ChevronRight,
+  Phone,
+  Menu,
+  X
 } from 'lucide-react';
 
 interface Question {
@@ -34,11 +31,15 @@ interface Question {
   userAnswer: string;
   type: 'true-false' | 'matching' | 'fill-blanks' | 'multiple-choice';
   explanation: string;
-  options?: string[];
   reference: {
     paragraph: string;
     text: string;
     elementId: string;
+  };
+  options?: string[];
+  matches?: {
+    items: string[];
+    descriptions: string[];
   };
 }
 
@@ -53,6 +54,265 @@ interface QuestionCategory {
 function App() {
   const [activeHighlight, setActiveHighlight] = useState<string | null>(null);
   const passageRef = useRef<HTMLDivElement>(null);
+  const [activeQuestionIndex, setActiveQuestionIndex] = useState(0);
+
+  const [questions, setQuestions] = useState<Question[]>([
+    // True/False Questions (1-5)
+    {
+      id: 1,
+      text: "According to paragraph A, glaciers develop when snow compresses into ice over time.",
+      answer: "True",
+      userAnswer: "",
+      type: "true-false",
+      explanation: "The passage explicitly states that glaciers form through the compression of snow over extended periods.",
+      reference: {
+        paragraph: "A",
+        text: "Glaciers are massive ice formations that develop over hundreds or thousands of years when fallen snow compresses into thick ice masses.",
+        elementId: "para-a-1"
+      }
+    },
+    {
+      id: 2,
+      text: "Based on paragraph B, glacier formation takes only a few years to complete.",
+      answer: "False",
+      userAnswer: "",
+      type: "true-false",
+      explanation: "The passage states that the process takes much longer than a few years.",
+      reference: {
+        paragraph: "B",
+        text: "This process can take several decades to centuries.",
+        elementId: "para-b-1"
+      }
+    },
+    {
+      id: 3,
+      text: "As mentioned in paragraph C, glaciers remain stationary and do not move.",
+      answer: "False",
+      userAnswer: "",
+      type: "true-false",
+      explanation: "The passage clearly describes glaciers as moving entities.",
+      reference: {
+        paragraph: "C",
+        text: "Under the influence of gravity and their own weight, glaciers flow like very slow rivers.",
+        elementId: "para-c-1"
+      }
+    },
+    {
+      id: 4,
+      text: "According to paragraph D, glaciers can be used to study past climate conditions.",
+      answer: "True",
+      userAnswer: "",
+      type: "true-false",
+      explanation: "The passage explicitly mentions that scientists use glaciers to understand past climate conditions.",
+      reference: {
+        paragraph: "D",
+        text: "Scientists study glaciers to understand past climate conditions and predict future environmental changes.",
+        elementId: "para-d-1"
+      }
+    },
+    {
+      id: 5,
+      text: "As stated in paragraph E, glacial movement creates U-shaped valleys.",
+      answer: "True",
+      userAnswer: "",
+      type: "true-false",
+      explanation: "The passage directly states that glacial movement creates U-shaped valleys.",
+      reference: {
+        paragraph: "E",
+        text: "Over long periods, glacial movement dramatically transforms the terrain, creating distinctive U-shaped valleys.",
+        elementId: "para-e-1"
+      }
+    },
+    
+    // Multiple Choice Questions (6-10)
+    {
+      id: 6,
+      text: "What is the primary factor in glacier formation according to paragraph A?",
+      answer: "Compression of snow over time",
+      userAnswer: "",
+      type: "multiple-choice",
+      options: [
+        "Compression of snow over time",
+        "Rapid freezing of water",
+        "Accumulation of ice crystals",
+        "Melting and refreezing of ice"
+      ],
+      explanation: "The passage states that glaciers form when fallen snow compresses into thick ice masses.",
+      reference: {
+        paragraph: "A",
+        text: "Glaciers are massive ice formations that develop over hundreds or thousands of years when fallen snow compresses into thick ice masses.",
+        elementId: "para-a-1"
+      }
+    },
+    {
+      id: 7,
+      text: "How long can the glacier formation process take according to paragraph B?",
+      answer: "Several decades to centuries",
+      userAnswer: "",
+      type: "multiple-choice",
+      options: [
+        "Several days to weeks",
+        "Several months to years",
+        "Several decades to centuries",
+        "Several minutes to hours"
+      ],
+      explanation: "The passage explicitly states that the process takes several decades to centuries.",
+      reference: {
+        paragraph: "B",
+        text: "This process can take several decades to centuries.",
+        elementId: "para-b-1"
+      }
+    },
+    {
+      id: 8,
+      text: "What is the rate of glacial movement mentioned in paragraph C?",
+      answer: "A few meters per year",
+      userAnswer: "",
+      type: "multiple-choice",
+      options: [
+        "A few centimeters per day",
+        "A few meters per year",
+        "A few kilometers per month",
+        "A few miles per week"
+      ],
+      explanation: "The passage specifies that glacial movement can be as slow as a few meters per year.",
+      reference: {
+        paragraph: "C",
+        text: "This glacial movement can be as slow as a few meters per year.",
+        elementId: "para-c-1"
+      }
+    },
+    {
+      id: 9,
+      text: "According to paragraph D, what do scientists use glaciers for?",
+      answer: "Understanding past climate conditions",
+      userAnswer: "",
+      type: "multiple-choice",
+      options: [
+        "Understanding past climate conditions",
+        "Predicting earthquakes",
+        "Studying ocean currents",
+        "Measuring atmospheric pressure"
+      ],
+      explanation: "The passage states that scientists study glaciers to understand past climate conditions.",
+      reference: {
+        paragraph: "D",
+        text: "Scientists study glaciers to understand past climate conditions and predict future environmental changes.",
+        elementId: "para-d-1"
+      }
+    },
+    {
+      id: 10,
+      text: "What type of valleys are created by glacial movement according to paragraph E?",
+      answer: "U-shaped valleys",
+      userAnswer: "",
+      type: "multiple-choice",
+      options: [
+        "V-shaped valleys",
+        "U-shaped valleys",
+        "W-shaped valleys",
+        "O-shaped valleys"
+      ],
+      explanation: "The passage specifically mentions that glacial movement creates U-shaped valleys.",
+      reference: {
+        paragraph: "E",
+        text: "Over long periods, glacial movement dramatically transforms the terrain, creating distinctive U-shaped valleys.",
+        elementId: "para-e-1"
+      }
+    },
+    
+    // Matching Questions
+    {
+      id: 11,
+      text: "Match the following descriptions with their corresponding paragraphs:",
+      answer: "A",
+      userAnswer: "",
+      type: "matching",
+      matches: {
+        items: ["A. Formation Process", "B. Time Scale", "C. Movement Pattern", "D. Scientific Value", "E. Environmental Impact"],
+        descriptions: [
+          "Describes how glaciers are created from snow compression",
+          "Explains the duration required for glacier development",
+          "Details how glaciers move and shape the landscape",
+          "Discusses the role of glaciers in climate research",
+          "Outlines the effects of glacial movement on terrain"
+        ]
+      },
+      explanation: "Each description matches with the main topic discussed in the corresponding paragraph.",
+      reference: {
+        paragraph: "All",
+        text: "Multiple paragraphs",
+        elementId: "para-all"
+      }
+    },
+
+    // Fill in the Blanks (12-16)
+    {
+      id: 12,
+      text: "According to paragraph A, glaciers develop when ________ compresses into ice over time.",
+      answer: "snow",
+      userAnswer: "",
+      type: "fill-blanks",
+      explanation: "The passage states that glaciers form when fallen snow compresses into thick ice masses.",
+      reference: {
+        paragraph: "A",
+        text: "Glaciers are massive ice formations that develop over hundreds or thousands of years when fallen snow compresses into thick ice masses.",
+        elementId: "para-a-1"
+      }
+    },
+    {
+      id: 13,
+      text: "The process of glacier formation can take several ________ to centuries.",
+      answer: "decades",
+      userAnswer: "",
+      type: "fill-blanks",
+      explanation: "The passage mentions that the process takes several decades to centuries.",
+      reference: {
+        paragraph: "B",
+        text: "This process can take several decades to centuries.",
+        elementId: "para-b-1"
+      }
+    },
+    {
+      id: 14,
+      text: "Glaciers flow like very slow ________ under the influence of gravity.",
+      answer: "rivers",
+      userAnswer: "",
+      type: "fill-blanks",
+      explanation: "The passage compares glacial movement to very slow rivers.",
+      reference: {
+        paragraph: "C",
+        text: "Under the influence of gravity and their own weight, glaciers flow like very slow rivers.",
+        elementId: "para-c-1"
+      }
+    },
+    {
+      id: 15,
+      text: "According to paragraph D, glaciers serve as natural ________ of global warming.",
+      answer: "barometers",
+      userAnswer: "",
+      type: "fill-blanks",
+      explanation: "The passage uses this specific term to describe glaciers' role in indicating global warming.",
+      reference: {
+        paragraph: "D",
+        text: "Their sensitivity to temperature fluctuations makes them natural barometers of global warming.",
+        elementId: "para-d-3"
+      }
+    },
+    {
+      id: 16,
+      text: "Glacial movement creates distinctive ________-shaped valleys.",
+      answer: "U",
+      userAnswer: "",
+      type: "fill-blanks",
+      explanation: "The passage specifically mentions U-shaped valleys as a result of glacial movement.",
+      reference: {
+        paragraph: "E",
+        text: "Over long periods, glacial movement dramatically transforms the terrain, creating distinctive U-shaped valleys.",
+        elementId: "para-e-1"
+      }
+    }
+  ]);
 
   const scrollToReference = (elementId: string) => {
     const element = document.getElementById(elementId);
@@ -92,10 +352,10 @@ function App() {
       type: 'multiple-choice',
       title: 'Multiple Choice Questions',
       icon: <ListChecks className="h-5 w-5 text-blue-600" />,
-      instructions: "Select the best answer from the given options based on the information in the passage.",
+      instructions: "Choose the best answer from the given options based on the information in the passage.",
       tips: [
-        'Read all options before selecting an answer',
-        'Eliminate obviously incorrect options',
+        'Read all options carefully before selecting',
+        'Eliminate obviously incorrect answers',
         'Look for evidence in the passage to support your choice',
         'Be careful of distractors that seem partially correct'
       ]
@@ -103,7 +363,7 @@ function App() {
     {
       type: 'matching',
       title: 'Matching Questions',
-      icon: <SplitSquareVertical className="h-5 w-5 text-blue-600" />,
+      icon: <ListChecks className="h-5 w-5 text-blue-600" />,
       instructions: "Match the given terms or phrases with their correct descriptions from the passage.",
       tips: [
         'Scan the passage for key terms and phrases',
@@ -126,306 +386,6 @@ function App() {
     }
   ];
 
-  const [questions, setQuestions] = useState<Question[]>([
-    // True/False Questions (1-5)
-    {
-      id: 1,
-      text: "According to paragraph A, glaciers develop when snow compresses into ice over time.",
-      answer: "True",
-      userAnswer: "",
-      type: "true-false",
-      explanation: "The passage explicitly states that glaciers form through the compression of snow over extended periods.",
-      reference: {
-        paragraph: "A",
-        text: "Glaciers are massive ice formations that develop over hundreds or thousands of years when fallen snow compresses into thick ice masses.",
-        elementId: "para-a-1"
-      }
-    },
-    {
-      id: 2,
-      text: "Based on paragraph B, glacier formation takes only a few years to complete.",
-      answer: "False",
-      userAnswer: "",
-      type: "true-false",
-      explanation: "The passage states that the process takes much longer than a few years.",
-      reference: {
-        paragraph: "B",
-        text: "This process can take several decades to centuries, resulting in ice formations that can be hundreds or even thousands of meters thick.",
-        elementId: "para-b-1"
-      }
-    },
-    {
-      id: 3,
-      text: "As mentioned in paragraph C, glaciers remain stationary and do not move.",
-      answer: "False",
-      userAnswer: "",
-      type: "true-false",
-      explanation: "The passage clearly describes glaciers as moving entities.",
-      reference: {
-        paragraph: "C",
-        text: "Under the influence of gravity and their own weight, glaciers flow like very slow rivers, carving valleys and transporting vast amounts of rock and sediment.",
-        elementId: "para-c-1"
-      }
-    },
-    {
-      id: 4,
-      text: "According to paragraph D, glaciers can be used to study past climate conditions.",
-      answer: "True",
-      userAnswer: "",
-      type: "true-false",
-      explanation: "The passage explicitly mentions that scientists use glaciers to understand past climate conditions.",
-      reference: {
-        paragraph: "D",
-        text: "Scientists study glaciers to understand past climate conditions and predict future environmental changes.",
-        elementId: "para-d-1"
-      }
-    },
-    {
-      id: 5,
-      text: "As stated in paragraph E, glacial movement creates U-shaped valleys.",
-      answer: "True",
-      userAnswer: "",
-      type: "true-false",
-      explanation: "The passage directly states that glacial movement creates U-shaped valleys.",
-      reference: {
-        paragraph: "E",
-        text: "Over long periods, glacial movement dramatically transforms the terrain, creating distinctive U-shaped valleys, cirques, and other glacial landforms.",
-        elementId: "para-e-1"
-      }
-    },
-    
-    // Multiple Choice Questions (6-10)
-    {
-      id: 6,
-      text: "What is the primary factor that causes glaciers to flow?",
-      answer: "Gravity and their own weight",
-      userAnswer: "",
-      type: "multiple-choice",
-      options: [
-        "Wind and temperature",
-        "Gravity and their own weight",
-        "Solar radiation",
-        "Ocean currents"
-      ],
-      explanation: "The passage explicitly states that glaciers flow under the influence of gravity and their own weight.",
-      reference: {
-        paragraph: "C",
-        text: "Under the influence of gravity and their own weight, glaciers flow like very slow rivers.",
-        elementId: "para-c-1"
-      }
-    },
-    {
-      id: 7,
-      text: "According to the passage, how long can the glacier formation process take?",
-      answer: "Several decades to centuries",
-      userAnswer: "",
-      type: "multiple-choice",
-      options: [
-        "A few years",
-        "Several months",
-        "Several decades to centuries",
-        "Only a few decades"
-      ],
-      explanation: "The passage specifically mentions that the process takes several decades to centuries.",
-      reference: {
-        paragraph: "B",
-        text: "This process can take several decades to centuries, resulting in ice formations that can be hundreds or even thousands of meters thick.",
-        elementId: "para-b-1"
-      }
-    },
-    {
-      id: 8,
-      text: "What is the typical rate of glacial movement mentioned in the passage?",
-      answer: "A few meters per year",
-      userAnswer: "",
-      type: "multiple-choice",
-      options: [
-        "Several kilometers per year",
-        "A few meters per day",
-        "A few meters per year",
-        "A few centimeters per year"
-      ],
-      explanation: "The passage states that glacial movement can be as slow as a few meters per year.",
-      reference: {
-        paragraph: "C",
-        text: "This glacial movement can be as slow as a few meters per year.",
-        elementId: "para-c-3"
-      }
-    },
-    {
-      id: 9,
-      text: "What role do glaciers play in modern scientific research?",
-      answer: "Indicators of climate change",
-      userAnswer: "",
-      type: "multiple-choice",
-      options: [
-        "Water source measurement",
-        "Indicators of climate change",
-        "Archaeological preservation",
-        "Geological dating"
-      ],
-      explanation: "The passage describes glaciers as crucial indicators of climate change.",
-      reference: {
-        paragraph: "D",
-        text: "Today, glaciers serve as crucial indicators of climate change.",
-        elementId: "para-d-1"
-      }
-    },
-    {
-      id: 10,
-      text: "What type of valleys are created by glacial movement?",
-      answer: "U-shaped valleys",
-      userAnswer: "",
-      type: "multiple-choice",
-      options: [
-        "V-shaped valleys",
-        "U-shaped valleys",
-        "W-shaped valleys",
-        "O-shaped valleys"
-      ],
-      explanation: "The passage specifically mentions that glacial movement creates distinctive U-shaped valleys.",
-      reference: {
-        paragraph: "E",
-        text: "Over long periods, glacial movement dramatically transforms the terrain, creating distinctive U-shaped valleys.",
-        elementId: "para-e-1"
-      }
-    },
-    
-    // Matching Questions (11-15)
-    {
-      id: 11,
-      text: "Match the term 'glacial movement' from paragraph C with its correct description:",
-      answer: "Flow like very slow rivers",
-      userAnswer: "",
-      type: "matching",
-      explanation: "The passage describes glacial movement using this specific analogy.",
-      reference: {
-        paragraph: "C",
-        text: "Under the influence of gravity and their own weight, glaciers flow like very slow rivers.",
-        elementId: "para-c-2"
-      }
-    },
-    {
-      id: 12,
-      text: "Match the process of glacier formation from paragraph A with its primary component:",
-      answer: "Compression of snow",
-      userAnswer: "",
-      type: "matching",
-      explanation: "The passage identifies snow compression as the key process in glacier formation.",
-      reference: {
-        paragraph: "A",
-        text: "Glaciers are massive ice formations that develop over hundreds or thousands of years when fallen snow compresses into thick ice masses.",
-        elementId: "para-a-2"
-      }
-    },
-    {
-      id: 13,
-      text: "Match the rate of glacial movement mentioned in paragraph C with the correct timeframe:",
-      answer: "A few meters per year",
-      userAnswer: "",
-      type: "matching",
-      explanation: "The passage specifies this exact rate of movement.",
-      reference: {
-        paragraph: "C",
-        text: "This glacial movement can be as slow as a few meters per year.",
-        elementId: "para-c-3"
-      }
-    },
-    {
-      id: 14,
-      text: "Match the role of glaciers described in paragraph D with their environmental significance:",
-      answer: "Climate change indicators",
-      userAnswer: "",
-      type: "matching",
-      explanation: "The passage describes glaciers as indicators of climate change.",
-      reference: {
-        paragraph: "D",
-        text: "Today, glaciers serve as crucial indicators of climate change.",
-        elementId: "para-d-2"
-      }
-    },
-    {
-      id: 15,
-      text: "Match the result of glacial movement from paragraph E with its landscape feature:",
-      answer: "U-shaped valleys",
-      userAnswer: "",
-      type: "matching",
-      explanation: "The passage specifically mentions U-shaped valleys as a result of glacial movement.",
-      reference: {
-        paragraph: "E",
-        text: "Over long periods, glacial movement dramatically transforms the terrain, creating distinctive U-shaped valleys.",
-        elementId: "para-e-2"
-      }
-    },
-    
-    // Fill in the Blanks (16-20)
-    {
-      id: 16,
-      text: "According to paragraph D, glaciers serve as natural ________ of global warming.",
-      answer: "barometers",
-      userAnswer: "",
-      type: "fill-blanks",
-      explanation: "The passage uses this specific term to describe glaciers' role in indicating global warming.",
-      reference: {
-        paragraph: "D",
-        text: "Their sensitivity to temperature fluctuations makes them natural barometers of global warming.",
-        elementId: "para-d-3"
-      }
-    },
-    {
-      id: 17,
-      text: "In paragraph B, the weight of upper layers ________ the snow beneath into ice.",
-      answer: "compresses",
-      userAnswer: "",
-      type: "fill-blanks",
-      explanation: "The passage uses this specific verb to describe the process.",
-      reference: {
-        paragraph: "A",
-        text: "As snow accumulates over time, the weight of the upper layers compresses the snow beneath.",
-        elementId: "para-a-3"
-      }
-    },
-    {
-      id: 18,
-      text: "As stated in paragraph A, glacier ice formations can be ________ or thousands of meters thick.",
-      answer: "hundreds",
-      userAnswer: "",
-      type: "fill-blanks",
-      explanation: "The passage uses this specific measurement term.",
-      reference: {
-        paragraph: "B",
-        text: "resulting in ice formations that can be hundreds or even thousands of meters thick.",
-        elementId: "para-b-2"
-      }
-    },
-    {
-      id: 19,
-      text: "According to paragraph C, glaciers transport vast amounts of ________ and sediment.",
-      answer: "rock",
-      userAnswer: "",
-      type: "fill-blanks",
-      explanation: "The passage specifically mentions rock along with sediment.",
-      reference: {
-        paragraph: "C",
-        text: "carving valleys and transporting vast amounts of rock and sediment.",
-        elementId: "para-c-4"
-      }
-    },
-    {
-      id: 20,
-      text: "Paragraph E states that the retreat of glaciers has implications for water resources, sea level ________, and local ecosystems.",
-      answer: "rise",
-      userAnswer: "",
-      type: "fill-blanks",
-      explanation: "The passage uses this specific term in relation to sea level changes.",
-      reference: {
-        paragraph: "E",
-        text: "with significant implications for water resources, sea level rise, and local ecosystems.",
-        elementId: "para-e-3"
-      }
-    }
-  ]);
-
   const [showAnswers, setShowAnswers] = useState(false);
   const [timer, setTimer] = useState(1200);
   const [isTimerRunning, setIsTimerRunning] = useState(false);
@@ -433,10 +393,9 @@ function App() {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [activeQuestionType, setActiveQuestionType] = useState<string>('true-false');
   const [showInstructions, setShowInstructions] = useState(false);
-  const [isPrepTipsExpanded, setIsPrepTipsExpanded] = useState(false);
-  const [isFaqExpanded, setIsFaqExpanded] = useState(false);
-  const [activeQuestionIndex, setActiveQuestionIndex] = useState(0);
-  const [isAnswersExpanded, setIsAnswersExpanded] = useState(false);
+  const [showDetailedAnswers, setShowDetailedAnswers] = useState(true);
+  const [expandedFAQ, setExpandedFAQ] = useState<number | null>(null);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   React.useEffect(() => {
     let interval: number;
@@ -474,28 +433,334 @@ function App() {
     return questionCategories.find(cat => cat.type === activeQuestionType)?.instructions;
   };
 
-  return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-5xl mx-auto px-4">
-      <header className="bg-white shadow-sm">
-        <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex justify-between items-center">
-            <div className="flex items-center space-x-3">
-              <BookOpen className="h-8 w-8 text-blue-600" />
-              <h1 className="text-xl font-bold text-gray-900">IELTS Reading Practice</h1>
+  const renderQuestion = (question: Question) => {
+    if (question.type === 'multiple-choice' && question.options) {
+      return (
+        <div className="space-y-3">
+          {question.options.map((option, index) => (
+            <label 
+              key={index}
+              className={`
+                flex items-center p-3 rounded-lg border cursor-pointer transition-all duration-200 w-full
+                ${question.userAnswer === option 
+                  ? 'bg-blue-50 border-blue-500 ring-2 ring-blue-500 ring-opacity-50' 
+                  : 'bg-white border-gray-200 hover:bg-gray-50'
+                }
+              `}
+            >
+              <input
+                type="radio"
+                name={`question-${question.id}`}
+                value={option}
+                checked={question.userAnswer === option}
+                onChange={(e) => handleAnswerChange(question.id, e.target.value)}
+                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+              />
+              <span className="ml-3 text-sm text-gray-900">{option}</span>
+            </label>
+          ))}
+        </div>
+      );
+    }
+
+    if (question.type === 'matching') {
+      if (!question.matches?.items || !question.matches?.descriptions) {
+        return null;
+      }
+      
+      const { items, descriptions } = question.matches;
+      return (
+        <div className="space-y-6">
+          <div className="bg-white rounded-lg border border-gray-200 p-6">
+            <div className="space-y-6">
+              <div>
+                <h4 className="font-medium text-gray-900 mb-4">Instructions:</h4>
+                <p className="text-sm text-gray-600">Match each description with the correct paragraph heading (A-E).</p>
+              </div>
+
+              {descriptions.map((desc, index) => (
+                <div 
+                  key={index} 
+                  className={`transition-all duration-300 ${
+                    activeQuestionIndex === index ? 'opacity-100' : 'hidden'
+                  }`}
+                >
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1">
+                        <div className="text-lg font-medium text-gray-900 mb-2">
+                          Description {index + 1} of {descriptions.length}
+                        </div>
+                        <div className="text-gray-700 bg-gray-50 p-4 rounded-lg border border-gray-200">
+                          {desc}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="mt-4">
+                      <div className="text-sm font-medium text-gray-700 mb-2">Select the matching paragraph:</div>
+                      <div className="grid grid-cols-1 gap-2">
+                        {items.map((item, i) => (
+                          <label 
+                            key={i}
+                            className={`
+                              flex items-center p-3 rounded-lg border cursor-pointer transition-all duration-200
+                              ${question.userAnswer === item.charAt(0) 
+                                ? 'bg-blue-50 border-blue-500 ring-2 ring-blue-500 ring-opacity-50' 
+                                : 'bg-white border-gray-200 hover:bg-gray-50'
+                              }
+                            `}
+                          >
+                            <input
+                              type="radio"
+                              name={`paragraph-${desc}`}
+                              value={item.charAt(0)}
+                              checked={question.userAnswer === item.charAt(0)}
+                              onChange={(e) => handleAnswerChange(question.id, e.target.value)}
+                              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                            />
+                            <span className="ml-3 text-sm text-gray-900">{item}</span>
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between mt-6 pt-4 border-t">
+                    <button
+                      onClick={() => setActiveQuestionIndex(index - 1)}
+                      disabled={index === 0}
+                      className={`flex items-center px-4 py-2 text-sm font-medium rounded-lg transition-colors
+                        ${index === 0 
+                          ? 'text-gray-400 bg-gray-100 cursor-not-allowed' 
+                          : 'text-blue-600 bg-blue-50 hover:bg-blue-100'
+                        }`}
+                    >
+                      <ChevronLeft className="h-4 w-4 mr-1" />
+                      Previous
+                    </button>
+                    <div className="flex items-center space-x-2">
+                      {descriptions.map((_, i) => (
+                        <button
+                          key={i}
+                          onClick={() => setActiveQuestionIndex(i)}
+                          className={`w-2.5 h-2.5 rounded-full transition-colors ${
+                            activeQuestionIndex === i ? 'bg-blue-600' : 'bg-gray-300 hover:bg-gray-400'
+                          }`}
+                          aria-label={`Go to description ${i + 1}`}
+                        />
+                      ))}
+                    </div>
+                    <button
+                      onClick={() => setActiveQuestionIndex(index + 1)}
+                      disabled={index === descriptions.length - 1}
+                      className={`flex items-center px-4 py-2 text-sm font-medium rounded-lg transition-colors
+                        ${index === descriptions.length - 1
+                          ? 'text-gray-400 bg-gray-100 cursor-not-allowed'
+                          : 'text-blue-600 bg-blue-50 hover:bg-blue-100'
+                        }`}
+                    >
+                      Next
+                      <ChevronRight className="h-4 w-4 ml-1" />
+                    </button>
+                  </div>
+                </div>
+              ))}
             </div>
-            <div className="flex items-center space-x-4">
-              <button className="flex items-center text-gray-600 hover:text-gray-900">
-                <Home className="h-5 w-5 mr-1" />
-                Home
-              </button>
-              <button className="flex items-center text-gray-600 hover:text-gray-900">
-                <Share2 className="h-5 w-5 mr-1" />
-                Share
+          </div>
+        </div>
+      );
+    }
+
+    if (question.type === 'true-false') {
+      return (
+        <div className="true-false-radio-container">
+          <label className={`true-false-radio-option ${question.userAnswer === 'True' ? 'selected' : ''}`}>
+            <input
+              type="radio"
+              name={`question-${question.id}`}
+              value="True"
+              checked={question.userAnswer === 'True'}
+              onChange={(e) => handleAnswerChange(question.id, e.target.value)}
+            />
+            <span className="true-false-radio-label">True</span>
+          </label>
+          <label className={`true-false-radio-option ${question.userAnswer === 'False' ? 'selected' : ''}`}>
+            <input
+              type="radio"
+              name={`question-${question.id}`}
+              value="False"
+              checked={question.userAnswer === 'False'}
+              onChange={(e) => handleAnswerChange(question.id, e.target.value)}
+            />
+            <span className="true-false-radio-label">False</span>
+          </label>
+        </div>
+      );
+    }
+
+    return (
+      <div className="mt-4">
+        <input
+          type="text"
+          value={question.userAnswer}
+          onChange={(e) => handleAnswerChange(question.id, e.target.value)}
+          placeholder="Type your answer here..."
+          className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+        />
+      </div>
+    );
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <header className="sticky top-0 z-50 w-full bg-[#006666] text-white">
+        <div className="max-w-7xl mx-auto">
+          {/* Top Header with Logo and Search */}
+          <div className="flex items-center justify-between px-4 py-3">
+            {/* Logo */}
+            <a href="/" className="flex items-center">
+              <div className="flex items-center">
+                <BookOpen className="h-6 w-6 md:h-8 md:w-8 text-white" />
+                <div className="ml-2 md:ml-3">
+                  <h1 className="text-lg md:text-xl font-bold text-white">Shiksha Study Abroad</h1>
+                </div>
+              </div>
+            </a>
+
+            {/* Search Bar - Hidden on mobile */}
+            <div className="hidden md:block flex-1 max-w-2xl mx-8">
+              <div className="relative">
+                <input
+                  type="text"
+                  placeholder="Enter course, college, country or exam"
+                  className="w-full px-4 py-2 text-gray-900 bg-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+                <button className="absolute right-0 top-0 h-full px-4 bg-[#F07C26] text-white rounded-r-md hover:bg-[#d66d1f] transition-colors">
+                  Search
+                </button>
+              </div>
+            </div>
+
+            {/* Right Side Links - Hidden on mobile */}
+            <div className="hidden md:flex items-center space-x-6">
+              <a href="/contact" className="flex items-center text-sm hover:text-gray-200">
+                <Phone className="h-4 w-4 mr-1" />
+                Contact Us
+              </a>
+              <a href="/login" className="flex items-center text-sm hover:text-gray-200">
+                <User className="h-4 w-4 mr-1" />
+                Rahul
+              </a>
+            </div>
+
+            {/* Mobile Menu Button */}
+            <button 
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              className="md:hidden p-2 hover:bg-[#007777] rounded-lg"
+            >
+              {isMobileMenuOpen ? (
+                <X className="h-6 w-6" />
+              ) : (
+                <Menu className="h-6 w-6" />
+              )}
+            </button>
+          </div>
+
+          {/* Mobile Search - Visible only on mobile */}
+          <div className="md:hidden px-4 pb-3">
+            <div className="relative">
+              <input
+                type="text"
+                placeholder="Search..."
+                className="w-full px-4 py-2 text-gray-900 bg-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              <button className="absolute right-0 top-0 h-full px-4 bg-[#F07C26] text-white rounded-r-md hover:bg-[#d66d1f] transition-colors">
+                Search
               </button>
             </div>
           </div>
-        </nav>
+
+          {/* Mobile Menu */}
+          <div className={`md:hidden ${isMobileMenuOpen ? 'block' : 'hidden'} bg-[#007777] px-4 py-2`}>
+            <div className="flex flex-col space-y-2">
+              <a href="/contact" className="flex items-center text-sm py-2 hover:text-gray-200">
+                <Phone className="h-4 w-4 mr-2" />
+                Contact Us
+              </a>
+              <a href="/login" className="flex items-center text-sm py-2 hover:text-gray-200">
+                <User className="h-4 w-4 mr-2" />
+                Rahul
+              </a>
+              <div className="h-px bg-[#008888] my-2"></div>
+              <button className="flex items-center justify-between text-sm py-2 hover:text-gray-200">
+                <span>COUNTRIES</span>
+                <ChevronDown className="h-4 w-4" />
+              </button>
+              <button className="flex items-center justify-between text-sm py-2 hover:text-gray-200">
+                <span>EXAMS</span>
+                <ChevronDown className="h-4 w-4" />
+              </button>
+              <button className="flex items-center justify-between text-sm py-2 hover:text-gray-200">
+                <span>COLLEGES</span>
+                <ChevronDown className="h-4 w-4" />
+              </button>
+              <button className="flex items-center justify-between text-sm py-2 hover:text-gray-200">
+                <span>FINANCES</span>
+                <ChevronDown className="h-4 w-4" />
+              </button>
+              <button className="flex items-center justify-between text-sm py-2 hover:text-gray-200">
+                <span>APPLY</span>
+                <ChevronDown className="h-4 w-4" />
+              </button>
+              <button className="flex items-center justify-between text-sm py-2 hover:text-gray-200">
+                <span>STUDY IN INDIA</span>
+                <ChevronDown className="h-4 w-4" />
+              </button>
+            </div>
+          </div>
+
+          {/* Bottom Navigation - Hidden on mobile */}
+          <nav className="hidden md:block border-t border-[#007777] px-4">
+            <div className="flex items-center space-x-8 py-2">
+              <div className="group relative">
+                <button className="flex items-center space-x-1 text-sm font-medium hover:text-gray-200">
+                  <span>COUNTRIES</span>
+                  <ChevronDown className="h-4 w-4" />
+                </button>
+              </div>
+              <div className="group relative">
+                <button className="flex items-center space-x-1 text-sm font-medium hover:text-gray-200">
+                  <span>EXAMS</span>
+                  <ChevronDown className="h-4 w-4" />
+                </button>
+              </div>
+              <div className="group relative">
+                <button className="flex items-center space-x-1 text-sm font-medium hover:text-gray-200">
+                  <span>COLLEGES</span>
+                  <ChevronDown className="h-4 w-4" />
+                </button>
+              </div>
+              <div className="group relative">
+                <button className="flex items-center space-x-1 text-sm font-medium hover:text-gray-200">
+                  <span>FINANCES</span>
+                  <ChevronDown className="h-4 w-4" />
+                </button>
+              </div>
+              <div className="group relative">
+                <button className="flex items-center space-x-1 text-sm font-medium hover:text-gray-200">
+                  <span>APPLY</span>
+                  <ChevronDown className="h-4 w-4" />
+                </button>
+              </div>
+              <div className="group relative">
+                <button className="flex items-center space-x-1 text-sm font-medium hover:text-gray-200">
+                  <span>STUDY IN INDIA</span>
+                  <ChevronDown className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+          </nav>
+        </div>
       </header>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -513,6 +778,10 @@ function App() {
               <Calendar className="h-4 w-4 mr-2" />
               <span>Last Updated: March 15, 2024</span>
             </div>
+            <div className="flex items-center">
+              <Book className="h-4 w-4 mr-2" />
+              <span>Band Score: 6.5-7.5</span>
+            </div>
           </div>
 
           <div className="prose max-w-none text-gray-700">
@@ -526,10 +795,73 @@ function App() {
               This practice test focuses on a fascinating passage about glaciers, offering you the opportunity to enhance your reading skills while learning about these remarkable natural phenomena. The questions that follow will help you practice key reading strategies and time management skills essential for success in the IELTS examination.
             </p>
           </div>
+
+          {/* New Index Section */}
+          <div className="mt-8 p-6 bg-gray-50 rounded-lg border border-gray-200">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+              <ListChecks className="h-5 w-5 text-blue-600 mr-2" />
+              Quick Navigation
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <a href="#reading-passage" 
+                className="flex items-center p-3 bg-white rounded-lg border border-gray-200 hover:border-blue-500 hover:shadow-md transition-all duration-200">
+                <Book className="h-5 w-5 text-blue-600 mr-3" />
+                <div>
+                  <div className="font-medium text-gray-900">Reading Passage</div>
+                  <div className="text-sm text-gray-500">Glaciers and their formation</div>
+                </div>
+              </a>
+              
+              <a href="#practice-questions" 
+                className="flex items-center p-3 bg-white rounded-lg border border-gray-200 hover:border-blue-500 hover:shadow-md transition-all duration-200">
+                <CheckSquare className="h-5 w-5 text-blue-600 mr-3" />
+                <div>
+                  <div className="font-medium text-gray-900">Practice Questions</div>
+                  <div className="text-sm text-gray-500">Test your understanding</div>
+                </div>
+              </a>
+
+              <a href="#detailed-answers" 
+                className="flex items-center p-3 bg-white rounded-lg border border-gray-200 hover:border-blue-500 hover:shadow-md transition-all duration-200">
+                <CheckCircle className="h-5 w-5 text-blue-600 mr-3" />
+                <div>
+                  <div className="font-medium text-gray-900">Detailed Answers</div>
+                  <div className="text-sm text-gray-500">Complete explanations</div>
+                </div>
+              </a>
+
+              <a href="#prep-tips" 
+                className="flex items-center p-3 bg-white rounded-lg border border-gray-200 hover:border-blue-500 hover:shadow-md transition-all duration-200">
+                <Info className="h-5 w-5 text-blue-600 mr-3" />
+                <div>
+                  <div className="font-medium text-gray-900">IELTS Prep Tips</div>
+                  <div className="text-sm text-gray-500">Essential strategies</div>
+                </div>
+              </a>
+
+              <a href="#faq" 
+                className="flex items-center p-3 bg-white rounded-lg border border-gray-200 hover:border-blue-500 hover:shadow-md transition-all duration-200">
+                <HelpCircle className="h-5 w-5 text-blue-600 mr-3" />
+                <div>
+                  <div className="font-medium text-gray-900">FAQ Section</div>
+                  <div className="text-sm text-gray-500">Common questions</div>
+                </div>
+              </a>
+
+              <a href="#similar-passages" 
+                className="flex items-center p-3 bg-white rounded-lg border border-gray-200 hover:border-blue-500 hover:shadow-md transition-all duration-200">
+                <Link className="h-5 w-5 text-blue-600 mr-3" />
+                <div>
+                  <div className="font-medium text-gray-900">Similar Passages</div>
+                  <div className="text-sm text-gray-500">More practice material</div>
+                </div>
+              </a>
+            </div>
+          </div>
         </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-            <div className="lg:col-span-8 bg-white rounded-lg shadow-md p-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="lg:col-span-2 bg-white rounded-lg shadow-md p-6">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-2xl font-bold text-gray-900">Glaciers Reading Passage</h2>
               <div className="flex items-center space-x-2">
@@ -552,6 +884,7 @@ function App() {
               />
               <div className="relative" ref={passageRef}>
                 <button
+                  id="reading-passage"
                   onClick={() => setIsPassageExpanded(!isPassageExpanded)}
                   className="flex items-center justify-between w-full text-left text-gray-700 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded-md mb-2"
                   aria-expanded={isPassageExpanded}
@@ -659,9 +992,9 @@ function App() {
             </article>
           </div>
 
-            <div className="lg:col-span-4 bg-white rounded-lg shadow-md p-6">
+          <div className="bg-white rounded-lg shadow-md p-6">
             <div className="flex items-center justify-between mb-6">
-              <h3 className="text-xl font-semibold text-gray-900">
+              <h3 id="practice-questions" className="text-xl font-semibold text-gray-900">
                 <Book className="inline h-5 w-5 mr-2 text-blue-600" />
                 Practice Questions
               </h3>
@@ -675,316 +1008,106 @@ function App() {
             </div>
 
             {showInstructions && (
-              <div className="mb-4 p-4 bg-blue-50 rounded-lg">
-                <p className="text-blue-800">{getCurrentCategoryInstructions()}</p>
+              <div className="mb-4 p-4 bg-pink-50 rounded-lg">
+                <p className="text-pink-800">{getCurrentCategoryInstructions()}</p>
               </div>
             )}
 
-              <div className="flex flex-wrap gap-2 mb-4">
+            <div className="mb-6">
+              <div className="flex flex-wrap gap-2 mb-8">
                 {questionCategories.map((category) => (
                   <button
                     key={category.type}
                     onClick={() => setActiveQuestionType(category.type)}
-                    className={`flex items-center min-w-[120px] px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                      activeQuestionType === category.type
-                        ? 'bg-blue-100 text-blue-700'
-                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    className={`question-category ${
+                      activeQuestionType === category.type ? 'active' : ''
                     }`}
                   >
                     {category.icon}
-                    <span className="ml-2 truncate">{category.title.split(' ')[0]}</span>
+                    <span className="ml-2 whitespace-nowrap">{category.title.split(' ')[0]}</span>
                   </button>
                 ))}
               </div>
 
-              <div className="overflow-y-auto mb-6">
-              <div className="space-y-4">
-                  {activeQuestionType === 'matching' ? (
-                    // Progressive disclosure for matching questions
-                    <div className="space-y-6">
-                      {getQuestionsByType('matching').map((question, index, array) => {
-                        const isActive = index === activeQuestionIndex;
-                        return (
-                          <div 
-                            key={question.id} 
-                            className={`transition-all duration-300 ${isActive ? 'opacity-100' : 'hidden opacity-0'}`}
-                          >
-                            <div className="flex justify-between items-center mb-4">
-                              <span className="text-sm text-gray-500">
-                                Question {index + 1} of {array.length}
-                              </span>
-                              <div className="flex space-x-1">
-                                {array.map((_, dotIndex) => (
-                                  <span
-                                    key={dotIndex}
-                                    className={`h-2 w-2 rounded-full ${
-                                      dotIndex === index ? 'bg-blue-600' : 'bg-gray-300'
-                                    }`}
-                                  />
-                                ))}
-                              </div>
-                            </div>
-
-                            <div className="bg-white p-6 rounded-lg border border-gray-200">
-                              <p className="font-medium text-gray-900 mb-4">
-                                {question.text}
-                              </p>
-                              <div className="grid grid-cols-1 gap-2">
-                                {[
-                                  "Flow",
-                                  "Compression",
-                                  "Meters",
-                                  "Indicators",
-                                  "U-shaped"
-                                ].map((option, optionIndex) => (
-                                  <label 
-                                    key={optionIndex} 
-                                    className="flex items-center p-3 rounded-lg border border-gray-200 hover:bg-gray-50 cursor-pointer transition-colors"
-                                  >
-                                    <input
-                                      type="radio"
-                                      name={`question-${question.id}`}
-                                      value={option}
-                                      checked={question.userAnswer === option}
-                                      onChange={(e) => handleAnswerChange(question.id, e.target.value)}
-                                      className="form-radio h-4 w-4 text-blue-600"
-                                    />
-                                    <span className="ml-3 text-gray-700">{option}</span>
-                                  </label>
-                                ))}
-                              </div>
-                              {showAnswers && (
-                                <div className="mt-4 pt-4 border-t">
-                                  <div className="flex items-center justify-between mb-2">
-                                    <div className="flex items-center">
-                                      {question.userAnswer.toLowerCase() === question.answer.toLowerCase() ? (
-                                        <span className="flex items-center text-green-600">
-                                          <CheckCircle2 className="h-5 w-5 mr-1" />
-                                          Correct
-                                        </span>
-                                      ) : (
-                                        <span className="flex items-center text-red-600">
-                                          <XCircle className="h-5 w-5 mr-1" />
-                                          Incorrect
-                                        </span>
-                                      )}
-                                    </div>
-                                  </div>
-                                  <p className="text-sm mb-1">
-                                    <span className="font-medium text-gray-700">Correct Answer:</span>{' '}
-                                    <span className="text-green-600">{question.answer}</span>
-                                  </p>
-                                  <p className="text-sm">
-                                    <span className="font-medium text-gray-700">Explanation:</span>{' '}
-                                    <span className="text-gray-600">{question.explanation}</span>
-                                  </p>
-                                </div>
-                              )}
-                            </div>
-
-                            <div className="flex justify-between mt-4">
-                              <button
-                                onClick={() => setActiveQuestionIndex(Math.max(0, index - 1))}
-                                disabled={index === 0}
-                                className={`flex items-center px-4 py-2 rounded-md text-sm font-medium ${
-                                  index === 0
-                                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                                    : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
-                                }`}
-                              >
-                                Previous
-                              </button>
-                              <button
-                                onClick={() => setActiveQuestionIndex(Math.min(array.length - 1, index + 1))}
-                                disabled={index === array.length - 1}
-                                className={`flex items-center px-4 py-2 rounded-md text-sm font-medium ${
-                                  index === array.length - 1
-                                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                                    : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
-                                }`}
-                              >
-                                Next
-                              </button>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  ) : activeQuestionType === 'true-false' ? (
-                    // True/False questions
-                    getQuestionsByType('true-false').map((question) => (
-                      <div key={question.id} className="border-b pb-4">
-                        <p className="font-medium text-gray-900 mb-2">
-                          {question.id}. {question.text}
-                        </p>
-                        <div className="space-y-2">
-                          {['True', 'False'].map((option) => (
-                            <label key={option} className="flex items-center space-x-3">
-                              <input
-                                type="radio"
-                                name={`question-${question.id}`}
-                                value={option}
-                                checked={question.userAnswer === option}
-                                onChange={(e) => handleAnswerChange(question.id, e.target.value)}
-                                className="form-radio h-4 w-4 text-blue-600"
-                              />
-                              <span className="text-gray-700">{option}</span>
-                            </label>
-                          ))}
-                        </div>
-                        {showAnswers && (
-                          <div className="mt-4 pt-4 border-t">
-                            <div className="flex items-center justify-between mb-2">
-                              <div className="flex items-center">
-                                {question.userAnswer.toLowerCase() === question.answer.toLowerCase() ? (
-                                  <span className="flex items-center text-green-600">
-                                    <CheckCircle2 className="h-5 w-5 mr-1" />
-                                    Correct
-                                  </span>
-                                ) : (
-                                  <span className="flex items-center text-red-600">
-                                    <XCircle className="h-5 w-5 mr-1" />
-                                    Incorrect
-                                  </span>
-                                )}
-                              </div>
-                            </div>
-                            <p className="text-sm mb-1">
-                              <span className="font-medium text-gray-700">Correct Answer:</span>{' '}
-                              <span className="text-green-600">{question.answer}</span>
-                            </p>
-                            <p className="text-sm">
-                              <span className="font-medium text-gray-700">Explanation:</span>{' '}
-                              <span className="text-gray-600">{question.explanation}</span>
-                            </p>
-                          </div>
-                        )}
-                      </div>
-                    ))
-                  ) : activeQuestionType === 'multiple-choice' ? (
-                    // Multiple Choice questions
-                    getQuestionsByType('multiple-choice').map((question) => (
-                      <div key={question.id} className="border-b pb-4">
-                        <p className="font-medium text-gray-900 mb-2">
-                          {question.id}. {question.text}
-                        </p>
-                        <div className="space-y-2">
-                          {question.options?.map((option, index) => (
-                            <label key={index} className="flex items-center space-x-3">
-                              <input
-                                type="radio"
-                                name={`question-${question.id}`}
-                                value={option}
-                                checked={question.userAnswer === option}
-                                onChange={(e) => handleAnswerChange(question.id, e.target.value)}
-                                className="form-radio h-4 w-4 text-blue-600"
-                              />
-                              <span className="text-gray-700">{option}</span>
-                            </label>
-                          ))}
-                        </div>
-                        {showAnswers && (
-                          <div className="mt-4 pt-4 border-t">
-                            <div className="flex items-center justify-between mb-2">
-                              <div className="flex items-center">
-                                {question.userAnswer.toLowerCase() === question.answer.toLowerCase() ? (
-                                  <span className="flex items-center text-green-600">
-                                    <CheckCircle2 className="h-5 w-5 mr-1" />
-                                    Correct
-                                  </span>
-                                ) : (
-                                  <span className="flex items-center text-red-600">
-                                    <XCircle className="h-5 w-5 mr-1" />
-                                    Incorrect
-                                  </span>
-                                )}
-                              </div>
-                            </div>
-                            <p className="text-sm mb-1">
-                              <span className="font-medium text-gray-700">Correct Answer:</span>{' '}
-                              <span className="text-green-600">{question.answer}</span>
-                            </p>
-                            <p className="text-sm">
-                              <span className="font-medium text-gray-700">Explanation:</span>{' '}
-                              <span className="text-gray-600">{question.explanation}</span>
-                            </p>
-                          </div>
-                        )}
-                      </div>
-                    ))
-                  ) : (
-                    // Fill in the blanks questions
-                    getQuestionsByType(activeQuestionType).map((question) => (
-                  <div key={question.id} className="border-b pb-4">
-                    <p className="font-medium text-gray-900 mb-2">
+              <div className="space-y-6">
+                {getQuestionsByType(activeQuestionType).map((question) => (
+                  <div key={question.id} className="question-container">
+                    <p className="font-medium text-gray-900 mb-3">
                       {question.id}. {question.text}
                     </p>
-                    <input
-                      type="text"
-                      value={question.userAnswer}
-                      onChange={(e) => handleAnswerChange(question.id, e.target.value)}
-                      placeholder="Type your answer here..."
-                      className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    />
+                    {renderQuestion(question)}
                     {showAnswers && (
-                          <div className="mt-4 pt-4 border-t">
-                            <div className="flex items-center justify-between mb-2">
-                              <div className="flex items-center">
-                                {question.userAnswer.toLowerCase() === question.answer.toLowerCase() ? (
-                                  <span className="flex items-center text-green-600">
-                                    <CheckCircle2 className="h-5 w-5 mr-1" />
-                                    Correct
-                                  </span>
-                                ) : (
-                                  <span className="flex items-center text-red-600">
-                                    <XCircle className="h-5 w-5 mr-1" />
-                                    Incorrect
-                                  </span>
-                                )}
-                              </div>
-                            </div>
-                            <p className="text-sm mb-1">
-                              <span className="font-medium text-gray-700">Correct Answer:</span>{' '}
-                              <span className="text-green-600">{question.answer}</span>
-                            </p>
-                            <p className="text-sm">
-                              <span className="font-medium text-gray-700">Explanation:</span>{' '}
-                              <span className="text-gray-600">{question.explanation}</span>
-                            </p>
+                      <div className="mt-3 text-sm">
+                        <span className="font-medium text-green-600">Correct answer:</span>
+                        <span className="ml-2">{question.answer}</span>
+                        {question.explanation && (
+                          <p className="mt-1 text-gray-600">{question.explanation}</p>
+                        )}
                       </div>
                     )}
                   </div>
-                    ))
-                  )}
+                ))}
               </div>
             </div>
 
+            <div className="mt-6 space-y-4">
               <button
                 onClick={() => setShowAnswers(true)}
                 className="w-full flex items-center justify-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
               >
                 <CheckCircle className="h-5 w-5 mr-2" />
                 Check Answers
+              </button>
+              {showAnswers && (
+                <div className="text-center">
+                  <p className="text-lg font-medium text-gray-900">
+                    Your Score: {calculateScore()} / {questions.length}
+                  </p>
+                  <button className="mt-2 text-blue-600 hover:text-blue-800 flex items-center justify-center w-full">
+                    Try Another Passage
+                    <ArrowRight className="h-4 w-4 ml-1" />
                   </button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
-          <div className="mt-6 bg-white rounded-lg shadow-md p-6">
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center space-x-3">
-                <CheckCircle2 className="h-7 w-7 text-blue-600" />
-                <h2 className="text-2xl font-bold text-gray-900">
+        {/* New Detailed Answers Section */}
+        <div id="detailed-answers" className="mt-12 bg-white rounded-lg shadow-md p-6">
+            <h2 className="text-2xl font-bold text-gray-900 mb-6">
               Detailed Answers and Explanations
             </h2>
-              </div>
-            </div>
 
-            <div className="space-y-6">
+            <div className="space-y-8">
               {questionCategories.map((category) => (
-                <div key={category.type} className="border-b pb-6 last:border-b-0">
-                  <div className="flex items-center space-x-2 mb-4">
+                <div key={category.type} className="border-b pb-6">
+                  <button
+                    onClick={() => setSelectedCategory(selectedCategory === category.type ? null : category.type)}
+                    className="flex items-center justify-between w-full text-left"
+                  >
+                    <div className="flex items-center space-x-2">
                       {category.icon}
                       <h3 className="text-xl font-semibold text-gray-900">{category.title}</h3>
+                    </div>
+                    {selectedCategory === category.type ? (
+                      <ChevronUp className="h-5 w-5" />
+                    ) : (
+                      <ChevronDown className="h-5 w-5" />
+                    )}
+                  </button>
+
+                  <div className={`mt-4 ${selectedCategory === category.type ? 'block' : 'hidden'}`}>
+                  <div className="bg-green-50 p-4 rounded-lg mb-4">
+                    <h4 className="flex items-center text-gray-900 font-medium mb-2">
+                        <Info className="h-4 w-4 mr-2" />
+                        Tips for {category.title}
+                      </h4>
+                    <ul className="list-disc list-inside space-y-1 text-gray-700">
+                        {category.tips.map((tip, index) => (
+                          <li key={index}>{tip}</li>
+                        ))}
+                      </ul>
                     </div>
 
                     <div className="space-y-4">
@@ -1001,7 +1124,7 @@ function App() {
                             {question.explanation}
                           </div>
                           <div 
-                          className="reference-quote flex items-center cursor-pointer hover:text-blue-600"
+                            className="reference-quote flex items-center"
                             onClick={() => scrollToReference(question.reference.elementId)}
                           >
                             <Link className="h-4 w-4 mr-2 text-blue-600" />
@@ -1014,290 +1137,368 @@ function App() {
                       ))}
                     </div>
                   </div>
-              ))}
                 </div>
+              ))}
+            </div>
           </div>
 
-          <div className="mt-6 bg-white rounded-lg shadow-md p-6">
-            <button
-              onClick={() => setIsPrepTipsExpanded(!isPrepTipsExpanded)}
-              className="w-full flex items-center justify-between text-left"
-            >
-              <div className="flex items-center space-x-3">
-                <ListChecks className="h-7 w-7 text-blue-600" />
-                <h2 className="text-2xl font-bold text-gray-900">
-                  IELTS Prep Tips for Glaciers Reading Passage
-                </h2>
+        {/* IELTS Prep Tips Section */}
+        <div id="prep-tips" className="mt-12 bg-white rounded-lg shadow-md p-6">
+          <div className="mb-8">
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">
+              IELTS Reading Preparation Tips
+            </h2>
+            <p className="text-gray-600">Essential strategies to improve your reading score</p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="bg-blue-50/50 rounded-lg p-6 border border-blue-100">
+              <div className="flex items-center mb-4">
+                <Clock className="h-5 w-5 text-blue-500 mr-3" />
+                <h3 className="text-lg font-semibold text-gray-900">Time Management</h3>
               </div>
-              {isPrepTipsExpanded ? (
-                <ChevronUp className="h-6 w-6 text-gray-500" />
-              ) : (
-                <ChevronDown className="h-6 w-6 text-gray-500" />
-              )}
-            </button>
-            
-            {isPrepTipsExpanded && (
-              <div className="mt-6 space-y-6">
+              <ul className="space-y-3">
                 {[
-                  {
-                    title: "1. Skim and Scan the Passage",
-                    details: [
-                      "Quickly read through the passage to get an overview of the content.",
-                      "Identify the main topics of each section to understand its focus."
-                    ]
-                  },
-                  {
-                    title: "2. Identify the Main Idea of Each Paragraph",
-                    details: [
-                      "Summarize each paragraph in your own words to identify the key information.",
-                      "Example:",
-                      "Paragraph 1: Introduces what glaciers are and their general significance.",
-                      "Paragraph 2: Discusses types and characteristics of glaciers."
-                    ]
-                  },
-                  {
-                    title: "3. Focus on Keywords and Synonyms",
-                    details: [
-                      "Highlight important keywords and potential synonyms to help find answers quickly.",
-                      'Example: "Glacier" may appear as "ice mass" or "frozen river".'
-                    ]
-                  },
-                  {
-                    title: "4. Practice Identifying True/False/Not Given Statements",
-                    details: [
-                      "Carefully match statements with the text, looking for similar meanings or contradictions.",
-                      "Ensure you understand whether the information is explicitly stated, implied, or not mentioned."
-                    ]
-                  },
-                  {
-                    title: "5. Be Aware of Paraphrasing",
-                    details: [
-                      "The passage may use different wording to express the same idea.",
-                      'Example: "Melting" might be stated as "thawing" or "liquefaction".'
-                    ]
-                  },
-                  {
-                    title: "6. Avoid Spending Too Much Time on One Question",
-                    details: [
-                      "If stuck, move on and come back to difficult questions later.",
-                      "Allocate approximately 20 minutes per reading passage."
-                    ]
-                  },
-                  {
-                    title: "7. Improve Vocabulary Knowledge",
-                    details: [
-                      "Focus on learning words related to glaciology, geography, and climatology.",
-                      'Example: "Moraine," "subglacial," "ice sheet," and "retreat."'
-                    ]
-                  },
-                  {
-                    title: "8. Review Your Answers",
-                    details: [
-                      "Double-check spelling, especially for scientific terms and proper nouns."
-                    ]
-                  },
-                  {
-                    title: "9. Write Answers in UPPERCASE",
-                    details: [
-                      "Helps prevent errors related to punctuation and formatting."
-                    ]
-                  },
-                  {
-                    title: "10. Practice with Similar Passages",
-                    details: [
-                      "Regular practice with similar topics and reading types will build comprehension and speed."
-                    ]
-                  }
+                  "Read the questions first to understand what to look for",
+                  "Skim the passage for main ideas",
+                  "Scan for specific details when answering questions",
+                  "Leave difficult questions for later",
+                  "Keep track of time for each section"
                 ].map((tip, index) => (
-                  <div key={index} className="bg-gray-50 rounded-lg p-6">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-3">
-                      {tip.title}
-                    </h3>
-                    <ul className="space-y-2">
-                      {tip.details.map((detail, detailIndex) => (
-                        <li key={detailIndex} className="text-gray-700 flex items-start">
-                          <span className="mr-2 mt-1.5">•</span>
-                          <span>{detail}</span>
-                        </li>
-                      ))}
-                    </ul>
-            </div>
+                  <li key={index} className="flex items-start">
+                    <span className="flex-shrink-0 w-5 h-5 bg-white border border-blue-200 rounded-full flex items-center justify-center text-xs font-medium mr-3 mt-1">
+                      {index + 1}
+                    </span>
+                    <span className="text-gray-700">{tip}</span>
+                  </li>
                 ))}
-          </div>
-        )}
-          </div>
+              </ul>
+            </div>
 
-          <div className="mt-6 bg-white rounded-lg shadow-md p-6">
-            <button
-              onClick={() => setIsFaqExpanded(!isFaqExpanded)}
-              className="w-full flex items-center justify-between text-left"
-            >
-              <div className="flex items-center space-x-3">
-                <HelpCircle className="h-7 w-7 text-blue-600" />
-                <h2 className="text-2xl font-bold text-gray-900">
-                  Frequently Asked Questions
-                </h2>
+            <div className="bg-purple-50/50 rounded-lg p-6 border border-purple-100">
+              <div className="flex items-center mb-4">
+                <Book className="h-5 w-5 text-purple-500 mr-3" />
+                <h3 className="text-lg font-semibold text-gray-900">Reading Strategies</h3>
               </div>
-              {isFaqExpanded ? (
-                <ChevronUp className="h-6 w-6 text-gray-500" />
-              ) : (
-                <ChevronDown className="h-6 w-6 text-gray-500" />
-              )}
-            </button>
-
-            {isFaqExpanded && (
-              <div className="mt-6 space-y-6">
+              <ul className="space-y-3">
                 {[
-                  {
-                    question: "How much time should I spend on each IELTS reading passage?",
-                    answer: "You should aim to spend about 20 minutes per passage in the IELTS reading test. Since there are three passages in total, this allows you to complete all questions within the 60-minute time limit. However, this passage might take longer initially as you're practicing and developing your skills."
-                  },
-                  {
-                    question: "What's the best strategy for matching questions?",
-                    answer: "For matching questions, first read all the headings/options carefully. Then, scan each paragraph to identify key words and main ideas. It's often helpful to eliminate obviously incorrect matches first. Remember that the answers may use synonyms or paraphrasing rather than exact words from the text."
-                  },
-                  {
-                    question: "How can I improve my reading speed?",
-                    answer: "To improve reading speed: 1) Practice skimming and scanning techniques regularly, 2) Read actively by focusing on topic sentences and key words, 3) Time yourself while practicing, 4) Read various English texts daily, and 5) Use the preview-read-review method to better understand passage structure."
-                  },
-                  {
-                    question: "Why are some questions harder than others?",
-                    answer: "Question difficulty varies to test different reading skills. True/False questions often test detail comprehension, multiple-choice questions assess broader understanding, and matching questions evaluate your ability to identify relationships between ideas. This variety ensures a comprehensive assessment of your reading abilities."
-                  },
-                  {
-                    question: "What should I do if I don't understand a word in the passage?",
-                    answer: "Don't panic if you encounter unfamiliar words. Try to understand the meaning from context by looking at surrounding sentences. Focus on the overall meaning of the paragraph rather than getting stuck on individual words. In IELTS, you can often answer questions correctly without understanding every single word."
-                  }
-                ].map((faq, index) => (
-                  <div key={index} className="border-b border-gray-200 pb-6 last:border-b-0">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                      {faq.question}
-                    </h3>
-                    <p className="text-gray-700">
-                      {faq.answer}
-                    </p>
-                  </div>
+                  "Practice with various text types",
+                  "Learn to identify key words",
+                  "Understand paragraph structure",
+                  "Build vocabulary systematically",
+                  "Read academic articles regularly"
+                ].map((tip, index) => (
+                  <li key={index} className="flex items-start">
+                    <span className="flex-shrink-0 w-5 h-5 bg-white border border-purple-200 rounded-full flex items-center justify-center text-xs font-medium mr-3 mt-1">
+                      {index + 1}
+                    </span>
+                    <span className="text-gray-700">{tip}</span>
+                  </li>
                 ))}
-              </div>
-            )}
-          </div>
-
-          <div className="mt-8 bg-white rounded-lg shadow-md p-6">
-            <div className="flex items-center space-x-3 mb-6">
-              <Book className="h-7 w-7 text-blue-600" />
-              <h2 className="text-2xl font-bold text-gray-900">
-                Similar IELTS Reading Passages
-              </h2>
+              </ul>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {[
-                {
-                  title: "Coconut Palm Reading Answers",
-                  description: "Study tropical agriculture",
-                  difficulty: "Easy",
-                  category: "Nature & Agriculture",
-                  color: "from-green-100 to-emerald-50"
-                },
-                {
-                  title: "Importance of Children's Play Reading Answers",
-                  description: "Child development insights",
-                  difficulty: "Easy",
-                  category: "Psychology",
-                  color: "from-green-100 to-teal-50"
-                },
-                {
-                  title: "Stepwells Reading Answers",
-                  description: "Explore ancient water architecture",
-                  difficulty: "Medium",
-                  category: "History & Architecture",
-                  color: "from-yellow-50 to-orange-50"
-                },
-                {
-                  title: "William Henry Perkin Reading Answers",
-                  description: "Discover chemical innovations",
-                  difficulty: "Medium",
-                  category: "Science & History",
-                  color: "from-amber-50 to-yellow-50"
-                },
-                {
-                  title: "Flying Tortoises Reading Answers",
-                  description: "Wildlife conservation study",
-                  difficulty: "Medium",
-                  category: "Wildlife",
-                  color: "from-orange-50 to-amber-50"
-                },
-                {
-                  title: "White Horse of Uffington Reading Answers",
-                  description: "Ancient art and archaeology",
-                  difficulty: "Medium",
-                  category: "History & Art",
-                  color: "from-yellow-50 to-amber-50"
-                },
-                {
-                  title: "Falkirk Wheel Reading Answers",
-                  description: "Learn about modern engineering",
-                  difficulty: "Hard",
-                  category: "Engineering",
-                  color: "from-red-50 to-rose-50"
-                },
-                {
-                  title: "History Of Glass Reading Answers",
-                  description: "Material science exploration",
-                  difficulty: "Hard",
-                  category: "Science & History",
-                  color: "from-rose-50 to-pink-50"
-                },
-                {
-                  title: "Concept of Intelligence Reading Answers",
-                  description: "Cognitive science analysis",
-                  difficulty: "Hard",
-                  category: "Psychology",
-                  color: "from-pink-50 to-red-50"
-                }
-              ].sort((a, b) => {
-                const difficultyOrder = { 'Easy': 1, 'Medium': 2, 'Hard': 3 } as const;
-                return difficultyOrder[a.difficulty as keyof typeof difficultyOrder] - difficultyOrder[b.difficulty as keyof typeof difficultyOrder];
-              }).map((passage, index) => (
-                <div 
-                  key={index}
-                  className={`group relative overflow-hidden transform transition-all duration-300 hover:scale-105 rounded-xl border border-gray-100
-                    bg-gradient-to-br ${passage.color}`}
-                >
-                  <div className="relative p-6 h-full">
-                    <div className="mb-4">
-                      <span className={`inline-block px-3 py-1 text-xs font-medium rounded-full
-                        ${passage.difficulty === 'Easy' ? 'bg-green-100 text-green-700' :
-                          passage.difficulty === 'Medium' ? 'bg-amber-100 text-amber-700' :
-                          'bg-rose-100 text-rose-700'}`}
-                      >
-                        {passage.difficulty}
-                      </span>
-                    </div>
-                    
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2 group-hover:text-gray-700 transition-colors duration-300">
-                      {passage.title}
-                    </h3>
-                    
-                    <p className="text-gray-600 text-sm mb-4">
-                      {passage.description}
-                    </p>
-                    
-                    <div className="flex items-center justify-between mt-auto">
-                      <span className="text-sm text-gray-500">
-                        {passage.category}
-                      </span>
-                      <ArrowRight className={`h-5 w-5 
-                        ${passage.difficulty === 'Easy' ? 'text-green-400' :
-                          passage.difficulty === 'Medium' ? 'text-amber-400' :
-                          'text-rose-400'}`} 
-                      />
-                    </div>
+            <div className="bg-pink-50/50 rounded-lg p-6 border border-pink-100">
+              <div className="flex items-center mb-4">
+                <CheckSquare className="h-5 w-5 text-pink-500 mr-3" />
+                <h3 className="text-lg font-semibold text-gray-900">Answer Techniques</h3>
+              </div>
+              <ul className="space-y-3">
+                {[
+                  "Read instructions carefully",
+                  "Look for paraphrased information",
+                  "Check word limits for answers",
+                  "Use elimination for multiple choice",
+                  "Verify answers with passage"
+                ].map((tip, index) => (
+                  <li key={index} className="flex items-start">
+                    <span className="flex-shrink-0 w-5 h-5 bg-white border border-pink-200 rounded-full flex items-center justify-center text-xs font-medium mr-3 mt-1">
+                      {index + 1}
+                    </span>
+                    <span className="text-gray-700">{tip}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <div className="bg-teal-50/50 rounded-lg p-6 border border-teal-100">
+              <div className="flex items-center mb-4">
+                <HelpCircle className="h-5 w-5 text-teal-500 mr-3" />
+                <h3 className="text-lg font-semibold text-gray-900">Common Pitfalls</h3>
+              </div>
+              <ul className="space-y-3">
+                {[
+                  "Don't read the entire passage first",
+                  "Avoid assumptions not in text",
+                  "Don't spend too long on one question",
+                  "Check spelling and grammar",
+                  "Don't leave questions unanswered"
+                ].map((tip, index) => (
+                  <li key={index} className="flex items-start">
+                    <span className="flex-shrink-0 w-5 h-5 bg-white border border-teal-200 rounded-full flex items-center justify-center text-xs font-medium mr-3 mt-1">
+                      {index + 1}
+                    </span>
+                    <span className="text-gray-700">{tip}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        {/* FAQ Section */}
+        <div id="faq" className="mt-12 bg-white rounded-lg shadow-md p-6">
+          <div className="mb-8">
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">
+              Frequently Asked Questions
+            </h2>
+            <p className="text-gray-600">Common questions about IELTS Reading test</p>
+          </div>
+
+          <div className="space-y-6">
+            <div className="border-b border-gray-100 pb-6">
+              <button
+                onClick={() => setExpandedFAQ(expandedFAQ === 1 ? null : 1)}
+                className="flex items-center justify-between w-full text-left"
+              >
+                <h3 className="text-lg font-semibold text-gray-900">
+                  How long is the IELTS Reading test?
+                </h3>
+                {expandedFAQ === 1 ? (
+                  <ChevronUp className="h-5 w-5 text-gray-500" />
+                ) : (
+                  <ChevronDown className="h-5 w-5 text-gray-500" />
+                )}
+              </button>
+              <div className={`mt-4 text-gray-600 ${expandedFAQ === 1 ? 'block' : 'hidden'}`}>
+                The IELTS Reading test lasts for 60 minutes. You need to read three passages and answer 40 questions in total. Time management is crucial as you have approximately 1.5 minutes per question.
+              </div>
+            </div>
+
+            <div className="border-b border-gray-100 pb-6">
+              <button
+                onClick={() => setExpandedFAQ(expandedFAQ === 2 ? null : 2)}
+                className="flex items-center justify-between w-full text-left"
+              >
+                <h3 className="text-lg font-semibold text-gray-900">
+                  What types of questions are in the IELTS Reading test?
+                </h3>
+                {expandedFAQ === 2 ? (
+                  <ChevronUp className="h-5 w-5 text-gray-500" />
+                ) : (
+                  <ChevronDown className="h-5 w-5 text-gray-500" />
+                )}
+              </button>
+              <div className={`mt-4 text-gray-600 ${expandedFAQ === 2 ? 'block' : 'hidden'}`}>
+                The test includes various question types such as multiple choice, true/false/not given, matching headings, sentence completion, and summary completion. Each type tests different reading skills and strategies.
+              </div>
+            </div>
+
+            <div className="border-b border-gray-100 pb-6">
+              <button
+                onClick={() => setExpandedFAQ(expandedFAQ === 3 ? null : 3)}
+                className="flex items-center justify-between w-full text-left"
+              >
+                <h3 className="text-lg font-semibold text-gray-900">
+                  How can I improve my reading speed?
+                </h3>
+                {expandedFAQ === 3 ? (
+                  <ChevronUp className="h-5 w-5 text-gray-500" />
+                ) : (
+                  <ChevronDown className="h-5 w-5 text-gray-500" />
+                )}
+              </button>
+              <div className={`mt-4 text-gray-600 ${expandedFAQ === 3 ? 'block' : 'hidden'}`}>
+                Practice skimming and scanning techniques regularly. Read academic articles, newspapers, and journals to build your reading stamina. Focus on understanding main ideas and key details rather than reading every word.
+              </div>
+            </div>
+
+            <div className="border-b border-gray-100 pb-6">
+              <button
+                onClick={() => setExpandedFAQ(expandedFAQ === 4 ? null : 4)}
+                className="flex items-center justify-between w-full text-left"
+              >
+                <h3 className="text-lg font-semibold text-gray-900">
+                  Is it better to read the questions first or the passage?
+                </h3>
+                {expandedFAQ === 4 ? (
+                  <ChevronUp className="h-5 w-5 text-gray-500" />
+                ) : (
+                  <ChevronDown className="h-5 w-5 text-gray-500" />
+                )}
+              </button>
+              <div className={`mt-4 text-gray-600 ${expandedFAQ === 4 ? 'block' : 'hidden'}`}>
+                It's generally recommended to skim the questions first to understand what information you need to look for. This helps you focus your reading and saves time by knowing what to pay attention to in the passage.
+              </div>
+            </div>
+
+            <div className="border-b border-gray-100 pb-6">
+              <button
+                onClick={() => setExpandedFAQ(expandedFAQ === 5 ? null : 5)}
+                className="flex items-center justify-between w-full text-left"
+              >
+                <h3 className="text-lg font-semibold text-gray-900">
+                  What should I do if I don't know the answer?
+                </h3>
+                {expandedFAQ === 5 ? (
+                  <ChevronUp className="h-5 w-5 text-gray-500" />
+                ) : (
+                  <ChevronDown className="h-5 w-5 text-gray-500" />
+                )}
+              </button>
+              <div className={`mt-4 text-gray-600 ${expandedFAQ === 5 ? 'block' : 'hidden'}`}>
+                Don't leave any questions unanswered. Make an educated guess based on the context and your understanding of the passage. Remember, there's no penalty for wrong answers, so it's better to attempt every question.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Similar IELTS Reading Passages Section */}
+        <div id="similar-passages" className="mt-12 bg-white rounded-lg shadow-md p-6">
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">
+            Similar IELTS Reading Passages for IELTS Preparation
+          </h2>
+          <p className="text-gray-600 mb-6">Sorted by difficulty level to match your band score target</p>
+
+          {/* Band 6-7 Section */}
+          <div className="mb-8">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+              <span className="px-2 py-1 bg-green-100 text-green-700 text-sm font-medium rounded mr-2">Band 6-7</span>
+              Foundation Level
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <a href="#" className="block bg-white rounded-lg border border-gray-200 hover:border-green-500 hover:shadow-md transition-all duration-200">
+                <div className="p-5">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-3">Stepwells Reading</h3>
+                  <p className="text-gray-600 text-sm mb-4">Explore the ancient water architecture of India and its historical significance.</p>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="flex items-center text-gray-500">
+                      <Clock className="h-4 w-4 mr-1" />
+                      20 mins
+                    </span>
+                    <span className="text-green-600 font-medium">View Answers →</span>
                   </div>
                 </div>
-              ))}
+              </a>
+
+              <a href="#" className="block bg-white rounded-lg border border-gray-200 hover:border-green-500 hover:shadow-md transition-all duration-200">
+                <div className="p-5">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-3">Coconut Palm</h3>
+                  <p className="text-gray-600 text-sm mb-4">The versatile uses and cultural significance of coconut palms worldwide.</p>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="flex items-center text-gray-500">
+                      <Clock className="h-4 w-4 mr-1" />
+                      20 mins
+                    </span>
+                    <span className="text-green-600 font-medium">View Answers →</span>
+                  </div>
+                </div>
+              </a>
+
+              <a href="#" className="block bg-white rounded-lg border border-gray-200 hover:border-green-500 hover:shadow-md transition-all duration-200">
+                <div className="p-5">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-3">History of Glass</h3>
+                  <p className="text-gray-600 text-sm mb-4">Evolution of glass-making from ancient times to modern applications.</p>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="flex items-center text-gray-500">
+                      <Clock className="h-4 w-4 mr-1" />
+                      20 mins
+                    </span>
+                    <span className="text-green-600 font-medium">View Answers →</span>
+                  </div>
+                </div>
+              </a>
             </div>
           </div>
+
+          {/* Band 7-8 Section */}
+          <div className="mb-8">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+              <span className="px-2 py-1 bg-yellow-100 text-yellow-700 text-sm font-medium rounded mr-2">Band 7-8</span>
+              Intermediate Level
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <a href="#" className="block bg-white rounded-lg border border-gray-200 hover:border-yellow-500 hover:shadow-md transition-all duration-200">
+                <div className="p-5">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-3">William Henry Perkin</h3>
+                  <p className="text-gray-600 text-sm mb-4">The story of synthetic dye discovery and its impact on modern chemistry.</p>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="flex items-center text-gray-500">
+                      <Clock className="h-4 w-4 mr-1" />
+                      25 mins
+                    </span>
+                    <span className="text-yellow-600 font-medium">View Answers →</span>
+                  </div>
+                </div>
+              </a>
+
+              <a href="#" className="block bg-white rounded-lg border border-gray-200 hover:border-yellow-500 hover:shadow-md transition-all duration-200">
+                <div className="p-5">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-3">Intelligence Concept</h3>
+                  <p className="text-gray-600 text-sm mb-4">Theories and debates surrounding human intelligence measurement.</p>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="flex items-center text-gray-500">
+                      <Clock className="h-4 w-4 mr-1" />
+                      25 mins
+                    </span>
+                    <span className="text-yellow-600 font-medium">View Answers →</span>
+                  </div>
+                </div>
+              </a>
+
+              <a href="#" className="block bg-white rounded-lg border border-gray-200 hover:border-yellow-500 hover:shadow-md transition-all duration-200">
+                <div className="p-5">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-3">Falkirk Wheel</h3>
+                  <p className="text-gray-600 text-sm mb-4">Engineering marvel of the world's only rotating boat lift in Scotland.</p>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="flex items-center text-gray-500">
+                      <Clock className="h-4 w-4 mr-1" />
+                      25 mins
+                    </span>
+                    <span className="text-yellow-600 font-medium">View Answers →</span>
+                  </div>
+                </div>
+              </a>
+            </div>
+          </div>
+
+          {/* Band 8-9 Section */}
+          <div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+              <span className="px-2 py-1 bg-red-100 text-red-700 text-sm font-medium rounded mr-2">Band 8-9</span>
+              Advanced Level
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <a href="#" className="block bg-white rounded-lg border border-gray-200 hover:border-red-500 hover:shadow-md transition-all duration-200">
+                <div className="p-5">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-3">Flying Tortoises</h3>
+                  <p className="text-gray-600 text-sm mb-4">Conservation efforts to save the Galápagos tortoises through aerial transport.</p>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="flex items-center text-gray-500">
+                      <Clock className="h-4 w-4 mr-1" />
+                      30 mins
+                    </span>
+                    <span className="text-red-600 font-medium">View Answers →</span>
+                  </div>
+                </div>
+              </a>
+
+              <a href="#" className="block bg-white rounded-lg border border-gray-200 hover:border-red-500 hover:shadow-md transition-all duration-200">
+                <div className="p-5">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-3">White Horse</h3>
+                  <p className="text-gray-600 text-sm mb-4">Ancient chalk figure carved into the English countryside and its mysteries.</p>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="flex items-center text-gray-500">
+                      <Clock className="h-4 w-4 mr-1" />
+                      30 mins
+                    </span>
+                    <span className="text-red-600 font-medium">View Answers →</span>
+                  </div>
+                </div>
+              </a>
+            </div>
+          </div>
+        </div>
       </main>
 
       <footer className="bg-gray-50 border-t mt-12">
@@ -1307,7 +1508,6 @@ function App() {
           </p>
         </div>
       </footer>
-      </div>
     </div>
   );
 }
