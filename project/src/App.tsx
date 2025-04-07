@@ -21,7 +21,8 @@ import {
   ChevronRight,
   Phone,
   Menu,
-  X
+  X,
+  ArrowDown
 } from 'lucide-react';
 
 interface Question {
@@ -396,6 +397,68 @@ function App() {
   const [showDetailedAnswers, setShowDetailedAnswers] = useState(true);
   const [expandedFAQ, setExpandedFAQ] = useState<number | null>(null);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [currentPollIndex, setCurrentPollIndex] = useState(0);
+  const [selectedOptions, setSelectedOptions] = useState<{ [key: number]: number[] }>({});
+  const [showResults, setShowResults] = useState<{ [key: number]: boolean }>({});
+  const [isIntroExpanded, setIsIntroExpanded] = useState(false);
+  const [isQuickNavExpanded, setIsQuickNavExpanded] = useState(false);
+
+  const polls = [
+    {
+      question: "Which IELTS section do you find most challenging?",
+      options: [
+        { text: "Reading", votes: 45 },
+        { text: "Writing", votes: 30 },
+        { text: "Speaking", votes: 15 },
+        { text: "Listening", votes: 10 }
+      ]
+    },
+    {
+      question: "What is your target IELTS band score?",
+      options: [
+        { text: "6.0-6.5", votes: 25 },
+        { text: "7.0-7.5", votes: 40 },
+        { text: "8.0-8.5", votes: 25 },
+        { text: "9.0", votes: 10 }
+      ]
+    },
+    {
+      question: "How often do you practice IELTS?",
+      options: [
+        { text: "Daily", votes: 20 },
+        { text: "3-4 times a week", votes: 35 },
+        { text: "Once a week", votes: 30 },
+        { text: "Less frequently", votes: 15 }
+      ]
+    }
+  ];
+
+  const handlePollOptionClick = (pollIndex: number, optionIndex: number) => {
+    setSelectedOptions(prev => {
+      const current = prev[pollIndex] || [];
+      const newSelected = current.includes(optionIndex)
+        ? current.filter(i => i !== optionIndex)
+        : [...current, optionIndex];
+      return { ...prev, [pollIndex]: newSelected };
+    });
+  };
+
+  const handleSubmitPoll = (pollIndex: number) => {
+    setShowResults(prev => ({ ...prev, [pollIndex]: true }));
+  };
+
+  const nextPoll = () => {
+    setCurrentPollIndex((prev) => (prev + 1) % polls.length);
+  };
+
+  const prevPoll = () => {
+    setCurrentPollIndex((prev) => (prev - 1 + polls.length) % polls.length);
+  };
+
+  const resetPoll = (pollIndex: number) => {
+    setSelectedOptions(prev => ({ ...prev, [pollIndex]: [] }));
+    setShowResults(prev => ({ ...prev, [pollIndex]: false }));
+  };
 
   React.useEffect(() => {
     let interval: number;
@@ -623,7 +686,7 @@ function App() {
                 <BookOpen className="h-6 w-6 md:h-8 md:w-8 text-white" />
                 <div className="ml-2 md:ml-3">
                   <h1 className="text-lg md:text-xl font-bold text-white">Shiksha Study Abroad</h1>
-                </div>
+            </div>
               </div>
             </a>
 
@@ -637,7 +700,7 @@ function App() {
                 />
                 <button className="absolute right-0 top-0 h-full px-4 bg-[#F07C26] text-white rounded-r-md hover:bg-[#d66d1f] transition-colors">
                   Search
-                </button>
+              </button>
               </div>
             </div>
 
@@ -756,10 +819,10 @@ function App() {
                 <button className="flex items-center space-x-1 text-sm font-medium hover:text-gray-200">
                   <span>STUDY IN INDIA</span>
                   <ChevronDown className="h-4 w-4" />
-                </button>
-              </div>
+              </button>
             </div>
-          </nav>
+          </div>
+        </nav>
         </div>
       </header>
 
@@ -769,7 +832,7 @@ function App() {
             Answers for Glaciers Reading Passage: IELTS Reading Test
           </h1>
           
-          <div className="flex items-center space-x-6 text-sm text-gray-600 mb-6">
+          <div className="flex flex-col md:flex-row md:items-center md:space-x-6 space-y-3 md:space-y-0 text-sm text-gray-600 mb-4">
             <div className="flex items-center">
               <User className="h-4 w-4 mr-2" />
               <span>By Sarah Thompson, IELTS Expert</span>
@@ -778,90 +841,123 @@ function App() {
               <Calendar className="h-4 w-4 mr-2" />
               <span>Last Updated: March 15, 2024</span>
             </div>
-            <div className="flex items-center">
-              <Book className="h-4 w-4 mr-2" />
-              <span>Band Score: 6.5-7.5</span>
-            </div>
           </div>
 
+          {/* Introduction */}
           <div className="prose max-w-none text-gray-700">
             <p className="mb-4">
               IELTS Reading passages are essential components of the International English Language Testing System (IELTS) examination, designed to assess candidates' reading comprehension abilities in academic and general contexts. These carefully curated texts evaluate various skills, including understanding main ideas, identifying specific information, recognizing writers' opinions, and following the development of an argument.
+              {!isIntroExpanded && (
+                <button
+                  onClick={() => setIsIntroExpanded(true)}
+                  className="text-blue-600 hover:text-blue-800 font-medium ml-2"
+                >
+                  Read More...
+                </button>
+              )}
             </p>
+            {isIntroExpanded && (
+              <>
             <p className="mb-4">
               The Academic Reading test, which includes passages like this one about glaciers, typically contains three long texts of increasing difficulty, drawn from books, journals, magazines, and newspapers. These passages are selected to be of general interest, dealing with topics that are appropriate and accessible to test takers entering undergraduate or postgraduate studies.
             </p>
-            <p>
+                <p className="mb-4">
               This practice test focuses on a fascinating passage about glaciers, offering you the opportunity to enhance your reading skills while learning about these remarkable natural phenomena. The questions that follow will help you practice key reading strategies and time management skills essential for success in the IELTS examination.
             </p>
+                <button
+                  onClick={() => setIsIntroExpanded(false)}
+                  className="text-blue-600 hover:text-blue-800 font-medium"
+                >
+                  Show Less
+                </button>
+              </>
+            )}
           </div>
 
           {/* New Index Section */}
-          <div className="mt-8 p-6 bg-gray-50 rounded-lg border border-gray-200">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-              <ListChecks className="h-5 w-5 text-blue-600 mr-2" />
-              Quick Navigation
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              <a href="#reading-passage" 
-                className="flex items-center p-3 bg-white rounded-lg border border-gray-200 hover:border-blue-500 hover:shadow-md transition-all duration-200">
-                <Book className="h-5 w-5 text-blue-600 mr-3" />
-                <div>
-                  <div className="font-medium text-gray-900">Reading Passage</div>
-                  <div className="text-sm text-gray-500">Glaciers and their formation</div>
-                </div>
-              </a>
-              
-              <a href="#practice-questions" 
-                className="flex items-center p-3 bg-white rounded-lg border border-gray-200 hover:border-blue-500 hover:shadow-md transition-all duration-200">
-                <CheckSquare className="h-5 w-5 text-blue-600 mr-3" />
-                <div>
-                  <div className="font-medium text-gray-900">Practice Questions</div>
-                  <div className="text-sm text-gray-500">Test your understanding</div>
-                </div>
-              </a>
+          <div className="mt-4 md:mt-8 p-4 md:p-6 bg-gray-50 rounded-lg border border-gray-200">
+            <button 
+              onClick={() => setIsQuickNavExpanded(!isQuickNavExpanded)}
+              className="md:hidden w-full flex items-center justify-between text-left text-lg font-semibold text-gray-900 mb-2"
+            >
+              <div className="flex items-center">
+                <ListChecks className="h-5 w-5 text-blue-600 mr-2" />
+                Quick Navigation
+        </div>
+              {isQuickNavExpanded ? (
+                <ChevronUp className="h-5 w-5 text-gray-500" />
+              ) : (
+                <ChevronDown className="h-5 w-5 text-gray-500" />
+              )}
+            </button>
+            
+            <div className={`md:block ${isQuickNavExpanded ? 'block' : 'hidden'}`}>
+              <h3 className="hidden md:flex text-lg font-semibold text-gray-900 mb-4 items-center">
+                <ListChecks className="h-5 w-5 text-blue-600 mr-2" />
+                Quick Navigation
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 md:gap-4">
+                <a href="#reading-passage" 
+                  className="flex items-center p-2 md:p-3 bg-white rounded-lg border border-gray-200 hover:border-blue-500 hover:shadow-md transition-all duration-200">
+                  <Book className="h-5 w-5 text-blue-600 mr-2 md:mr-3" />
+                  <div>
+                    <div className="font-medium text-gray-900">Reading Passage</div>
+                    <div className="text-sm text-gray-500">Glaciers and their formation</div>
+                  </div>
+                </a>
+                
+                <a href="#practice-questions" 
+                  className="flex items-center p-2 md:p-3 bg-white rounded-lg border border-gray-200 hover:border-blue-500 hover:shadow-md transition-all duration-200">
+                  <CheckSquare className="h-5 w-5 text-blue-600 mr-2 md:mr-3" />
+                  <div>
+                    <div className="font-medium text-gray-900">Practice Questions</div>
+                    <div className="text-sm text-gray-500">Test your understanding</div>
+                  </div>
+                </a>
 
-              <a href="#detailed-answers" 
-                className="flex items-center p-3 bg-white rounded-lg border border-gray-200 hover:border-blue-500 hover:shadow-md transition-all duration-200">
-                <CheckCircle className="h-5 w-5 text-blue-600 mr-3" />
-                <div>
-                  <div className="font-medium text-gray-900">Detailed Answers</div>
-                  <div className="text-sm text-gray-500">Complete explanations</div>
-                </div>
-              </a>
+                <a href="#detailed-answers" 
+                  className="flex items-center p-2 md:p-3 bg-white rounded-lg border border-gray-200 hover:border-blue-500 hover:shadow-md transition-all duration-200">
+                  <CheckCircle className="h-5 w-5 text-blue-600 mr-2 md:mr-3" />
+                  <div>
+                    <div className="font-medium text-gray-900">Detailed Answers</div>
+                    <div className="text-sm text-gray-500">Complete explanations</div>
+                  </div>
+                </a>
 
-              <a href="#prep-tips" 
-                className="flex items-center p-3 bg-white rounded-lg border border-gray-200 hover:border-blue-500 hover:shadow-md transition-all duration-200">
-                <Info className="h-5 w-5 text-blue-600 mr-3" />
-                <div>
-                  <div className="font-medium text-gray-900">IELTS Prep Tips</div>
-                  <div className="text-sm text-gray-500">Essential strategies</div>
-                </div>
-              </a>
+                <a href="#prep-tips" 
+                  className="flex items-center p-2 md:p-3 bg-white rounded-lg border border-gray-200 hover:border-blue-500 hover:shadow-md transition-all duration-200">
+                  <Info className="h-5 w-5 text-blue-600 mr-2 md:mr-3" />
+                  <div>
+                    <div className="font-medium text-gray-900">IELTS Prep Tips</div>
+                    <div className="text-sm text-gray-500">Essential strategies</div>
+                  </div>
+                </a>
 
-              <a href="#faq" 
-                className="flex items-center p-3 bg-white rounded-lg border border-gray-200 hover:border-blue-500 hover:shadow-md transition-all duration-200">
-                <HelpCircle className="h-5 w-5 text-blue-600 mr-3" />
-                <div>
-                  <div className="font-medium text-gray-900">FAQ Section</div>
-                  <div className="text-sm text-gray-500">Common questions</div>
-                </div>
-              </a>
+                <a href="#faq" 
+                  className="flex items-center p-2 md:p-3 bg-white rounded-lg border border-gray-200 hover:border-blue-500 hover:shadow-md transition-all duration-200">
+                  <HelpCircle className="h-5 w-5 text-blue-600 mr-2 md:mr-3" />
+                  <div>
+                    <div className="font-medium text-gray-900">FAQ Section</div>
+                    <div className="text-sm text-gray-500">Common questions</div>
+                  </div>
+                </a>
 
-              <a href="#similar-passages" 
-                className="flex items-center p-3 bg-white rounded-lg border border-gray-200 hover:border-blue-500 hover:shadow-md transition-all duration-200">
-                <Link className="h-5 w-5 text-blue-600 mr-3" />
-                <div>
-                  <div className="font-medium text-gray-900">Similar Passages</div>
-                  <div className="text-sm text-gray-500">More practice material</div>
-                </div>
-              </a>
+                <a href="#similar-passages" 
+                  className="flex items-center p-2 md:p-3 bg-white rounded-lg border border-gray-200 hover:border-blue-500 hover:shadow-md transition-all duration-200">
+                  <Link className="h-5 w-5 text-blue-600 mr-2 md:mr-3" />
+                  <div>
+                    <div className="font-medium text-gray-900">Similar Passages</div>
+                    <div className="text-sm text-gray-500">More practice material</div>
+                  </div>
+                </a>
+              </div>
             </div>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2 bg-white rounded-lg shadow-md p-6">
+        <div className="flex flex-col lg:grid lg:grid-cols-3 gap-8">
+          {/* Glaciers Reading Passage - Always First */}
+          <div className="lg:col-span-2 bg-white rounded-lg shadow-md p-6 order-1">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-2xl font-bold text-gray-900">Glaciers Reading Passage</h2>
               <div className="flex items-center space-x-2">
@@ -874,6 +970,15 @@ function App() {
                   {isTimerRunning ? 'Pause' : 'Start'}
                 </button>
               </div>
+            </div>
+
+            {/* Download PDF CTA */}
+            <div className="mb-6 flex flex-col md:flex-row md:items-center md:justify-between bg-gray-50 rounded-lg p-3 md:p-4 border border-gray-200">
+              <p className="text-gray-600 text-sm mb-3 md:mb-0">Download this passage with detailed answers to read offline.</p>
+              <button className="flex items-center justify-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-duration-200 whitespace-nowrap">
+                <ArrowDown className="h-4 w-4 mr-2" />
+                Download as PDF
+              </button>
             </div>
 
             <article className="prose max-w-none">
@@ -992,7 +1097,8 @@ function App() {
             </article>
           </div>
 
-          <div className="bg-white rounded-lg shadow-md p-6">
+          {/* Practice Questions - Third on mobile, Second on desktop */}
+          <div className="bg-white rounded-lg shadow-md p-6 order-3 lg:order-2">
             <div className="flex items-center justify-between mb-6">
               <h3 id="practice-questions" className="text-xl font-semibold text-gray-900">
                 <Book className="inline h-5 w-5 mr-2 text-blue-600" />
@@ -1069,12 +1175,11 @@ function App() {
                   </button>
                 </div>
               )}
-            </div>
           </div>
         </div>
 
-        {/* New Detailed Answers Section */}
-        <div id="detailed-answers" className="mt-12 bg-white rounded-lg shadow-md p-6">
+          {/* Detailed Answers - Second on mobile, Third on desktop */}
+          <div id="detailed-answers" className="mt-12 lg:mt-0 bg-white rounded-lg shadow-md p-6 order-2 lg:order-3 lg:col-span-3">
             <h2 className="text-2xl font-bold text-gray-900 mb-6">
               Detailed Answers and Explanations
             </h2>
@@ -1086,9 +1191,21 @@ function App() {
                     onClick={() => setSelectedCategory(selectedCategory === category.type ? null : category.type)}
                     className="flex items-center justify-between w-full text-left"
                   >
-                    <div className="flex items-center space-x-2">
-                      {category.icon}
-                      <h3 className="text-xl font-semibold text-gray-900">{category.title}</h3>
+                    <div className="flex flex-col">
+                      <div className="flex items-start">
+                        <div className="flex-shrink-0 mt-1">
+                          {category.icon}
+                        </div>
+                        <div className="ml-2">
+                          <h3 className="text-xl font-semibold text-gray-900">{category.title}</h3>
+                          <span className="text-sm text-gray-600 block">
+                            {category.type === 'true-false' && 'Questions 1-5'}
+                            {category.type === 'multiple-choice' && 'Questions 6-10'}
+                            {category.type === 'matching' && 'Question 11'}
+                            {category.type === 'fill-blanks' && 'Questions 12-16'}
+                          </span>
+                        </div>
+                      </div>
                     </div>
                     {selectedCategory === category.type ? (
                       <ChevronUp className="h-5 w-5" />
@@ -1142,360 +1259,453 @@ function App() {
             </div>
           </div>
 
-        {/* IELTS Prep Tips Section */}
-        <div id="prep-tips" className="mt-12 bg-white rounded-lg shadow-md p-6">
-          <div className="mb-8">
+          {/* Similar Passages - Fourth on mobile, Fourth on desktop */}
+          <div id="similar-passages" className="mt-12 lg:mt-0 bg-white rounded-lg shadow-md p-6 order-4 lg:order-4 lg:col-span-3">
             <h2 className="text-2xl font-bold text-gray-900 mb-2">
-              IELTS Reading Preparation Tips
+              Similar IELTS Reading Passages for IELTS Preparation
             </h2>
-            <p className="text-gray-600">Essential strategies to improve your reading score</p>
-          </div>
+            <p className="text-gray-600 mb-6">Practice with different question types to improve your skills</p>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="bg-blue-50/50 rounded-lg p-6 border border-blue-100">
-              <div className="flex items-center mb-4">
-                <Clock className="h-5 w-5 text-blue-500 mr-3" />
-                <h3 className="text-lg font-semibold text-gray-900">Time Management</h3>
-              </div>
-              <ul className="space-y-3">
-                {[
-                  "Read the questions first to understand what to look for",
-                  "Skim the passage for main ideas",
-                  "Scan for specific details when answering questions",
-                  "Leave difficult questions for later",
-                  "Keep track of time for each section"
-                ].map((tip, index) => (
-                  <li key={index} className="flex items-start">
-                    <span className="flex-shrink-0 w-5 h-5 bg-white border border-blue-200 rounded-full flex items-center justify-center text-xs font-medium mr-3 mt-1">
-                      {index + 1}
-                    </span>
-                    <span className="text-gray-700">{tip}</span>
-                  </li>
-                ))}
-              </ul>
+            {/* Question Type Navigation */}
+            <div className="flex items-center space-x-2 mb-8">
+              {questionCategories.map((category) => (
+                <button
+                  key={category.type}
+                  onClick={() => setActiveQuestionType(category.type)}
+                  className={`question-category ${
+                    activeQuestionType === category.type ? 'active' : ''
+                  }`}
+                >
+                  {category.icon}
+                  <span className="ml-2">{category.title.split(' ')[0]}</span>
+                </button>
+              ))}
             </div>
 
-            <div className="bg-purple-50/50 rounded-lg p-6 border border-purple-100">
-              <div className="flex items-center mb-4">
-                <Book className="h-5 w-5 text-purple-500 mr-3" />
-                <h3 className="text-lg font-semibold text-gray-900">Reading Strategies</h3>
-              </div>
-              <ul className="space-y-3">
-                {[
-                  "Practice with various text types",
-                  "Learn to identify key words",
-                  "Understand paragraph structure",
-                  "Build vocabulary systematically",
-                  "Read academic articles regularly"
-                ].map((tip, index) => (
-                  <li key={index} className="flex items-start">
-                    <span className="flex-shrink-0 w-5 h-5 bg-white border border-purple-200 rounded-full flex items-center justify-center text-xs font-medium mr-3 mt-1">
-                      {index + 1}
-                    </span>
-                    <span className="text-gray-700">{tip}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            <div className="bg-pink-50/50 rounded-lg p-6 border border-pink-100">
-              <div className="flex items-center mb-4">
-                <CheckSquare className="h-5 w-5 text-pink-500 mr-3" />
-                <h3 className="text-lg font-semibold text-gray-900">Answer Techniques</h3>
-              </div>
-              <ul className="space-y-3">
-                {[
-                  "Read instructions carefully",
-                  "Look for paraphrased information",
-                  "Check word limits for answers",
-                  "Use elimination for multiple choice",
-                  "Verify answers with passage"
-                ].map((tip, index) => (
-                  <li key={index} className="flex items-start">
-                    <span className="flex-shrink-0 w-5 h-5 bg-white border border-pink-200 rounded-full flex items-center justify-center text-xs font-medium mr-3 mt-1">
-                      {index + 1}
-                    </span>
-                    <span className="text-gray-700">{tip}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            <div className="bg-teal-50/50 rounded-lg p-6 border border-teal-100">
-              <div className="flex items-center mb-4">
-                <HelpCircle className="h-5 w-5 text-teal-500 mr-3" />
-                <h3 className="text-lg font-semibold text-gray-900">Common Pitfalls</h3>
-              </div>
-              <ul className="space-y-3">
-                {[
-                  "Don't read the entire passage first",
-                  "Avoid assumptions not in text",
-                  "Don't spend too long on one question",
-                  "Check spelling and grammar",
-                  "Don't leave questions unanswered"
-                ].map((tip, index) => (
-                  <li key={index} className="flex items-start">
-                    <span className="flex-shrink-0 w-5 h-5 bg-white border border-teal-200 rounded-full flex items-center justify-center text-xs font-medium mr-3 mt-1">
-                      {index + 1}
-                    </span>
-                    <span className="text-gray-700">{tip}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
-        </div>
-
-        {/* FAQ Section */}
-        <div id="faq" className="mt-12 bg-white rounded-lg shadow-md p-6">
-          <div className="mb-8">
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">
-              Frequently Asked Questions
-            </h2>
-            <p className="text-gray-600">Common questions about IELTS Reading test</p>
-          </div>
-
-          <div className="space-y-6">
-            <div className="border-b border-gray-100 pb-6">
-              <button
-                onClick={() => setExpandedFAQ(expandedFAQ === 1 ? null : 1)}
-                className="flex items-center justify-between w-full text-left"
-              >
-                <h3 className="text-lg font-semibold text-gray-900">
-                  How long is the IELTS Reading test?
-                </h3>
-                {expandedFAQ === 1 ? (
-                  <ChevronUp className="h-5 w-5 text-gray-500" />
-                ) : (
-                  <ChevronDown className="h-5 w-5 text-gray-500" />
-                )}
-              </button>
-              <div className={`mt-4 text-gray-600 ${expandedFAQ === 1 ? 'block' : 'hidden'}`}>
-                The IELTS Reading test lasts for 60 minutes. You need to read three passages and answer 40 questions in total. Time management is crucial as you have approximately 1.5 minutes per question.
-              </div>
-            </div>
-
-            <div className="border-b border-gray-100 pb-6">
-              <button
-                onClick={() => setExpandedFAQ(expandedFAQ === 2 ? null : 2)}
-                className="flex items-center justify-between w-full text-left"
-              >
-                <h3 className="text-lg font-semibold text-gray-900">
-                  What types of questions are in the IELTS Reading test?
-                </h3>
-                {expandedFAQ === 2 ? (
-                  <ChevronUp className="h-5 w-5 text-gray-500" />
-                ) : (
-                  <ChevronDown className="h-5 w-5 text-gray-500" />
-                )}
-              </button>
-              <div className={`mt-4 text-gray-600 ${expandedFAQ === 2 ? 'block' : 'hidden'}`}>
-                The test includes various question types such as multiple choice, true/false/not given, matching headings, sentence completion, and summary completion. Each type tests different reading skills and strategies.
-              </div>
-            </div>
-
-            <div className="border-b border-gray-100 pb-6">
-              <button
-                onClick={() => setExpandedFAQ(expandedFAQ === 3 ? null : 3)}
-                className="flex items-center justify-between w-full text-left"
-              >
-                <h3 className="text-lg font-semibold text-gray-900">
-                  How can I improve my reading speed?
-                </h3>
-                {expandedFAQ === 3 ? (
-                  <ChevronUp className="h-5 w-5 text-gray-500" />
-                ) : (
-                  <ChevronDown className="h-5 w-5 text-gray-500" />
-                )}
-              </button>
-              <div className={`mt-4 text-gray-600 ${expandedFAQ === 3 ? 'block' : 'hidden'}`}>
-                Practice skimming and scanning techniques regularly. Read academic articles, newspapers, and journals to build your reading stamina. Focus on understanding main ideas and key details rather than reading every word.
-              </div>
-            </div>
-
-            <div className="border-b border-gray-100 pb-6">
-              <button
-                onClick={() => setExpandedFAQ(expandedFAQ === 4 ? null : 4)}
-                className="flex items-center justify-between w-full text-left"
-              >
-                <h3 className="text-lg font-semibold text-gray-900">
-                  Is it better to read the questions first or the passage?
-                </h3>
-                {expandedFAQ === 4 ? (
-                  <ChevronUp className="h-5 w-5 text-gray-500" />
-                ) : (
-                  <ChevronDown className="h-5 w-5 text-gray-500" />
-                )}
-              </button>
-              <div className={`mt-4 text-gray-600 ${expandedFAQ === 4 ? 'block' : 'hidden'}`}>
-                It's generally recommended to skim the questions first to understand what information you need to look for. This helps you focus your reading and saves time by knowing what to pay attention to in the passage.
-              </div>
-            </div>
-
-            <div className="border-b border-gray-100 pb-6">
-              <button
-                onClick={() => setExpandedFAQ(expandedFAQ === 5 ? null : 5)}
-                className="flex items-center justify-between w-full text-left"
-              >
-                <h3 className="text-lg font-semibold text-gray-900">
-                  What should I do if I don't know the answer?
-                </h3>
-                {expandedFAQ === 5 ? (
-                  <ChevronUp className="h-5 w-5 text-gray-500" />
-                ) : (
-                  <ChevronDown className="h-5 w-5 text-gray-500" />
-                )}
-              </button>
-              <div className={`mt-4 text-gray-600 ${expandedFAQ === 5 ? 'block' : 'hidden'}`}>
-                Don't leave any questions unanswered. Make an educated guess based on the context and your understanding of the passage. Remember, there's no penalty for wrong answers, so it's better to attempt every question.
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Similar IELTS Reading Passages Section */}
-        <div id="similar-passages" className="mt-12 bg-white rounded-lg shadow-md p-6">
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">
-            Similar IELTS Reading Passages for IELTS Preparation
-          </h2>
-          <p className="text-gray-600 mb-6">Sorted by difficulty level to match your band score target</p>
-
-          {/* Band 6-7 Section */}
-          <div className="mb-8">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-              <span className="px-2 py-1 bg-green-100 text-green-700 text-sm font-medium rounded mr-2">Band 6-7</span>
-              Foundation Level
-            </h3>
+            {/* Passages Grid */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <a href="#" className="block bg-white rounded-lg border border-gray-200 hover:border-green-500 hover:shadow-md transition-all duration-200">
-                <div className="p-5">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-3">Stepwells Reading</h3>
-                  <p className="text-gray-600 text-sm mb-4">Explore the ancient water architecture of India and its historical significance.</p>
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="flex items-center text-gray-500">
-                      <Clock className="h-4 w-4 mr-1" />
-                      20 mins
-                    </span>
-                    <span className="text-green-600 font-medium">View Answers →</span>
-                  </div>
-                </div>
-              </a>
+              {/* True/False Questions Passages */}
+              {activeQuestionType === 'true-false' && (
+                <>
+                  <a href="#" className="block bg-white rounded-lg border border-gray-200 hover:border-blue-500 hover:shadow-md transition-all duration-200">
+                    <div className="p-5">
+                      <h3 className="text-lg font-semibold text-gray-900 mb-3">The History of Chocolate</h3>
+                      <p className="text-gray-600 text-sm mb-4">Explore the origins and evolution of chocolate from ancient civilizations to modern times.</p>
+                      <span className="text-blue-600 font-medium">View Answers →</span>
+                    </div>
+                  </a>
 
-              <a href="#" className="block bg-white rounded-lg border border-gray-200 hover:border-green-500 hover:shadow-md transition-all duration-200">
-                <div className="p-5">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-3">Coconut Palm</h3>
-                  <p className="text-gray-600 text-sm mb-4">The versatile uses and cultural significance of coconut palms worldwide.</p>
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="flex items-center text-gray-500">
-                      <Clock className="h-4 w-4 mr-1" />
-                      20 mins
-                    </span>
-                    <span className="text-green-600 font-medium">View Answers →</span>
-                  </div>
-                </div>
-              </a>
+                  <a href="#" className="block bg-white rounded-lg border border-gray-200 hover:border-blue-500 hover:shadow-md transition-all duration-200">
+                    <div className="p-5">
+                      <h3 className="text-lg font-semibold text-gray-900 mb-3">The Great Barrier Reef</h3>
+                      <p className="text-gray-600 text-sm mb-4">Understanding the ecosystem and conservation efforts of the world's largest coral reef system.</p>
+                      <span className="text-blue-600 font-medium">View Answers →</span>
+                    </div>
+                  </a>
 
-              <a href="#" className="block bg-white rounded-lg border border-gray-200 hover:border-green-500 hover:shadow-md transition-all duration-200">
-                <div className="p-5">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-3">History of Glass</h3>
-                  <p className="text-gray-600 text-sm mb-4">Evolution of glass-making from ancient times to modern applications.</p>
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="flex items-center text-gray-500">
-                      <Clock className="h-4 w-4 mr-1" />
-                      20 mins
-                    </span>
-                    <span className="text-green-600 font-medium">View Answers →</span>
-                  </div>
-                </div>
-              </a>
+                  <a href="#" className="block bg-white rounded-lg border border-gray-200 hover:border-blue-500 hover:shadow-md transition-all duration-200">
+                    <div className="p-5">
+                      <h3 className="text-lg font-semibold text-gray-900 mb-3">The Industrial Revolution</h3>
+                      <p className="text-gray-600 text-sm mb-4">Impact of technological advancements on society and economy during the 18th and 19th centuries.</p>
+                      <span className="text-blue-600 font-medium">View Answers →</span>
+                    </div>
+                  </a>
+
+                  <a href="#" className="block bg-white rounded-lg border border-gray-200 hover:border-blue-500 hover:shadow-md transition-all duration-200">
+                    <div className="p-5">
+                      <h3 className="text-lg font-semibold text-gray-900 mb-3">Ancient Egyptian Pyramids</h3>
+                      <p className="text-gray-600 text-sm mb-4">The construction and significance of pyramids in ancient Egyptian civilization.</p>
+                      <span className="text-blue-600 font-medium">View Answers →</span>
+                    </div>
+                  </a>
+
+                  <a href="#" className="block bg-white rounded-lg border border-gray-200 hover:border-blue-500 hover:shadow-md transition-all duration-200">
+                    <div className="p-5">
+                      <h3 className="text-lg font-semibold text-gray-900 mb-3">The Human Immune System</h3>
+                      <p className="text-gray-600 text-sm mb-4">How our body's defense mechanisms protect us from diseases and infections.</p>
+                      <span className="text-blue-600 font-medium">View Answers →</span>
+                    </div>
+                  </a>
+
+                  <a href="#" className="block bg-white rounded-lg border border-gray-200 hover:border-blue-500 hover:shadow-md transition-all duration-200">
+                    <div className="p-5">
+                      <h3 className="text-lg font-semibold text-gray-900 mb-3">The Art of Photography</h3>
+                      <p className="text-gray-600 text-sm mb-4">Evolution of photography from early cameras to modern digital technology.</p>
+                      <span className="text-blue-600 font-medium">View Answers →</span>
+                    </div>
+                  </a>
+                </>
+              )}
+
+              {/* Multiple Choice Questions Passages */}
+              {activeQuestionType === 'multiple-choice' && (
+                <>
+                  <a href="#" className="block bg-white rounded-lg border border-gray-200 hover:border-blue-500 hover:shadow-md transition-all duration-200">
+                    <div className="p-5">
+                      <h3 className="text-lg font-semibold text-gray-900 mb-3">The Human Brain</h3>
+                      <p className="text-gray-600 text-sm mb-4">Exploring the structure, functions, and mysteries of the human brain.</p>
+                      <span className="text-blue-600 font-medium">View Answers →</span>
+                    </div>
+                  </a>
+
+                  <a href="#" className="block bg-white rounded-lg border border-gray-200 hover:border-blue-500 hover:shadow-md transition-all duration-200">
+                    <div className="p-5">
+                      <h3 className="text-lg font-semibold text-gray-900 mb-3">Renewable Energy</h3>
+                      <p className="text-gray-600 text-sm mb-4">Understanding different types of renewable energy sources and their global impact.</p>
+                      <span className="text-blue-600 font-medium">View Answers →</span>
+                    </div>
+                  </a>
+
+                  <a href="#" className="block bg-white rounded-lg border border-gray-200 hover:border-blue-500 hover:shadow-md transition-all duration-200">
+                    <div className="p-5">
+                      <h3 className="text-lg font-semibold text-gray-900 mb-3">Ancient Civilizations</h3>
+                      <p className="text-gray-600 text-sm mb-4">Comparing the development and achievements of early human civilizations.</p>
+                      <span className="text-blue-600 font-medium">View Answers →</span>
+                    </div>
+                  </a>
+
+                  <a href="#" className="block bg-white rounded-lg border border-gray-200 hover:border-blue-500 hover:shadow-md transition-all duration-200">
+                    <div className="p-5">
+                      <h3 className="text-lg font-semibold text-gray-900 mb-3">Space Exploration</h3>
+                      <p className="text-gray-600 text-sm mb-4">The journey of human exploration beyond Earth and future space missions.</p>
+                      <span className="text-blue-600 font-medium">View Answers →</span>
+                    </div>
+                  </a>
+
+                  <a href="#" className="block bg-white rounded-lg border border-gray-200 hover:border-blue-500 hover:shadow-md transition-all duration-200">
+                    <div className="p-5">
+                      <h3 className="text-lg font-semibold text-gray-900 mb-3">Marine Biology</h3>
+                      <p className="text-gray-600 text-sm mb-4">Discovering the diverse life forms and ecosystems in Earth's oceans.</p>
+                      <span className="text-blue-600 font-medium">View Answers →</span>
+                    </div>
+                  </a>
+
+                  <a href="#" className="block bg-white rounded-lg border border-gray-200 hover:border-blue-500 hover:shadow-md transition-all duration-200">
+                    <div className="p-5">
+                      <h3 className="text-lg font-semibold text-gray-900 mb-3">Modern Architecture</h3>
+                      <p className="text-gray-600 text-sm mb-4">Evolution of architectural design and sustainable building practices.</p>
+                      <span className="text-blue-600 font-medium">View Answers →</span>
+                    </div>
+                  </a>
+                </>
+              )}
+
+              {/* Matching Questions Passages */}
+              {activeQuestionType === 'matching' && (
+                <>
+                  <a href="#" className="block bg-white rounded-lg border border-gray-200 hover:border-blue-500 hover:shadow-md transition-all duration-200">
+                    <div className="p-5">
+                      <h3 className="text-lg font-semibold text-gray-900 mb-3">Climate Change</h3>
+                      <p className="text-gray-600 text-sm mb-4">Understanding the causes, effects, and solutions to global climate change.</p>
+                      <span className="text-blue-600 font-medium">View Answers →</span>
+                    </div>
+                  </a>
+
+                  <a href="#" className="block bg-white rounded-lg border border-gray-200 hover:border-blue-500 hover:shadow-md transition-all duration-200">
+                    <div className="p-5">
+                      <h3 className="text-lg font-semibold text-gray-900 mb-3">The Solar System</h3>
+                      <p className="text-gray-600 text-sm mb-4">Exploring the planets, moons, and other celestial bodies in our solar system.</p>
+                      <span className="text-blue-600 font-medium">View Answers →</span>
+                    </div>
+                  </a>
+
+                  <a href="#" className="block bg-white rounded-lg border border-gray-200 hover:border-blue-500 hover:shadow-md transition-all duration-200">
+                    <div className="p-5">
+                      <h3 className="text-lg font-semibold text-gray-900 mb-3">World Languages</h3>
+                      <p className="text-gray-600 text-sm mb-4">The evolution and diversity of languages across different cultures and regions.</p>
+                      <span className="text-blue-600 font-medium">View Answers →</span>
+                    </div>
+                  </a>
+
+                  <a href="#" className="block bg-white rounded-lg border border-gray-200 hover:border-blue-500 hover:shadow-md transition-all duration-200">
+                    <div className="p-5">
+                      <h3 className="text-lg font-semibold text-gray-900 mb-3">Human Migration</h3>
+                      <p className="text-gray-600 text-sm mb-4">Historical patterns and modern trends in global human migration.</p>
+                      <span className="text-blue-600 font-medium">View Answers →</span>
+                    </div>
+                  </a>
+
+                  <a href="#" className="block bg-white rounded-lg border border-gray-200 hover:border-blue-500 hover:shadow-md transition-all duration-200">
+                    <div className="p-5">
+                      <h3 className="text-lg font-semibold text-gray-900 mb-3">Artificial Intelligence</h3>
+                      <p className="text-gray-600 text-sm mb-4">Development and impact of AI technology on society and industry.</p>
+                      <span className="text-blue-600 font-medium">View Answers →</span>
+                    </div>
+                  </a>
+
+                  <a href="#" className="block bg-white rounded-lg border border-gray-200 hover:border-blue-500 hover:shadow-md transition-all duration-200">
+                    <div className="p-5">
+                      <h3 className="text-lg font-semibold text-gray-900 mb-3">World Cuisine</h3>
+                      <p className="text-gray-600 text-sm mb-4">Cultural significance and evolution of food traditions worldwide.</p>
+                      <span className="text-blue-600 font-medium">View Answers →</span>
+                    </div>
+                  </a>
+                </>
+              )}
+
+              {/* Fill in the Blanks Passages */}
+              {activeQuestionType === 'fill-blanks' && (
+                <>
+                  <a href="#" className="block bg-white rounded-lg border border-gray-200 hover:border-blue-500 hover:shadow-md transition-all duration-200">
+                    <div className="p-5">
+                      <h3 className="text-lg font-semibold text-gray-900 mb-3">The Internet Revolution</h3>
+                      <p className="text-gray-600 text-sm mb-4">How the internet has transformed communication, business, and society.</p>
+                      <span className="text-blue-600 font-medium">View Answers →</span>
+                    </div>
+                  </a>
+
+                  <a href="#" className="block bg-white rounded-lg border border-gray-200 hover:border-blue-500 hover:shadow-md transition-all duration-200">
+                    <div className="p-5">
+                      <h3 className="text-lg font-semibold text-gray-900 mb-3">Ocean Exploration</h3>
+                      <p className="text-gray-600 text-sm mb-4">Discovering the mysteries of the deep sea and marine ecosystems.</p>
+                      <span className="text-blue-600 font-medium">View Answers →</span>
+                    </div>
+                  </a>
+
+                  <a href="#" className="block bg-white rounded-lg border border-gray-200 hover:border-blue-500 hover:shadow-md transition-all duration-200">
+                    <div className="p-5">
+                      <h3 className="text-lg font-semibold text-gray-900 mb-3">Space Exploration</h3>
+                      <p className="text-gray-600 text-sm mb-4">The history and future of human exploration beyond Earth's atmosphere.</p>
+                      <span className="text-blue-600 font-medium">View Answers →</span>
+                    </div>
+                  </a>
+
+                  <a href="#" className="block bg-white rounded-lg border border-gray-200 hover:border-blue-500 hover:shadow-md transition-all duration-200">
+                    <div className="p-5">
+                      <h3 className="text-lg font-semibold text-gray-900 mb-3">Sustainable Agriculture</h3>
+                      <p className="text-gray-600 text-sm mb-4">Modern farming practices for environmental conservation and food security.</p>
+                      <span className="text-blue-600 font-medium">View Answers →</span>
+                    </div>
+                  </a>
+
+                  <a href="#" className="block bg-white rounded-lg border border-gray-200 hover:border-blue-500 hover:shadow-md transition-all duration-200">
+                    <div className="p-5">
+                      <h3 className="text-lg font-semibold text-gray-900 mb-3">Global Transportation</h3>
+                      <p className="text-gray-600 text-sm mb-4">Evolution of transport systems and their impact on global connectivity.</p>
+                      <span className="text-blue-600 font-medium">View Answers →</span>
+                    </div>
+                  </a>
+
+                  <a href="#" className="block bg-white rounded-lg border border-gray-200 hover:border-blue-500 hover:shadow-md transition-all duration-200">
+                    <div className="p-5">
+                      <h3 className="text-lg font-semibold text-gray-900 mb-3">Mental Health</h3>
+                      <p className="text-gray-600 text-sm mb-4">Understanding psychological well-being and modern treatment approaches.</p>
+                      <span className="text-blue-600 font-medium">View Answers →</span>
+                    </div>
+                  </a>
+                </>
+              )}
             </div>
           </div>
 
-          {/* Band 7-8 Section */}
-          <div className="mb-8">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-              <span className="px-2 py-1 bg-yellow-100 text-yellow-700 text-sm font-medium rounded mr-2">Band 7-8</span>
-              Intermediate Level
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <a href="#" className="block bg-white rounded-lg border border-gray-200 hover:border-yellow-500 hover:shadow-md transition-all duration-200">
-                <div className="p-5">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-3">William Henry Perkin</h3>
-                  <p className="text-gray-600 text-sm mb-4">The story of synthetic dye discovery and its impact on modern chemistry.</p>
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="flex items-center text-gray-500">
-                      <Clock className="h-4 w-4 mr-1" />
-                      25 mins
-                    </span>
-                    <span className="text-yellow-600 font-medium">View Answers →</span>
-                  </div>
-                </div>
-              </a>
+          {/* IELTS Prep Tips - Fifth on both */}
+          <div id="prep-tips" className="mt-12 bg-white rounded-lg shadow-md p-6 order-5 lg:col-span-3">
+            <div className="mb-8">
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">
+                IELTS Reading Preparation Tips
+              </h2>
+              <p className="text-gray-600">Essential strategies to improve your reading score</p>
+            </div>
 
-              <a href="#" className="block bg-white rounded-lg border border-gray-200 hover:border-yellow-500 hover:shadow-md transition-all duration-200">
-                <div className="p-5">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-3">Intelligence Concept</h3>
-                  <p className="text-gray-600 text-sm mb-4">Theories and debates surrounding human intelligence measurement.</p>
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="flex items-center text-gray-500">
-                      <Clock className="h-4 w-4 mr-1" />
-                      25 mins
-                    </span>
-                    <span className="text-yellow-600 font-medium">View Answers →</span>
-                  </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="bg-blue-50/50 rounded-lg p-6 border border-blue-100">
+                <div className="flex items-center mb-4">
+                  <Clock className="h-5 w-5 text-blue-500 mr-3" />
+                  <h3 className="text-lg font-semibold text-gray-900">Time Management</h3>
                 </div>
-              </a>
+                <ul className="space-y-3">
+                  {[
+                    "Read the questions first to understand what to look for",
+                    "Skim the passage for main ideas",
+                    "Scan for specific details when answering questions",
+                    "Leave difficult questions for later",
+                    "Keep track of time for each section"
+                  ].map((tip, index) => (
+                    <li key={index} className="flex items-start">
+                      <span className="flex-shrink-0 w-5 h-5 bg-white border border-blue-200 rounded-full flex items-center justify-center text-xs font-medium mr-3 mt-1">
+                        {index + 1}
+                      </span>
+                      <span className="text-gray-700">{tip}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
 
-              <a href="#" className="block bg-white rounded-lg border border-gray-200 hover:border-yellow-500 hover:shadow-md transition-all duration-200">
-                <div className="p-5">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-3">Falkirk Wheel</h3>
-                  <p className="text-gray-600 text-sm mb-4">Engineering marvel of the world's only rotating boat lift in Scotland.</p>
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="flex items-center text-gray-500">
-                      <Clock className="h-4 w-4 mr-1" />
-                      25 mins
-                    </span>
-                    <span className="text-yellow-600 font-medium">View Answers →</span>
-                  </div>
+              <div className="bg-purple-50/50 rounded-lg p-6 border border-purple-100">
+                <div className="flex items-center mb-4">
+                  <Book className="h-5 w-5 text-purple-500 mr-3" />
+                  <h3 className="text-lg font-semibold text-gray-900">Reading Strategies</h3>
                 </div>
-              </a>
+                <ul className="space-y-3">
+                  {[
+                    "Practice with various text types",
+                    "Learn to identify key words",
+                    "Understand paragraph structure",
+                    "Build vocabulary systematically",
+                    "Read academic articles regularly"
+                  ].map((tip, index) => (
+                    <li key={index} className="flex items-start">
+                      <span className="flex-shrink-0 w-5 h-5 bg-white border border-purple-200 rounded-full flex items-center justify-center text-xs font-medium mr-3 mt-1">
+                        {index + 1}
+                      </span>
+                      <span className="text-gray-700">{tip}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              <div className="bg-pink-50/50 rounded-lg p-6 border border-pink-100">
+                <div className="flex items-center mb-4">
+                  <CheckSquare className="h-5 w-5 text-pink-500 mr-3" />
+                  <h3 className="text-lg font-semibold text-gray-900">Answer Techniques</h3>
+                </div>
+                <ul className="space-y-3">
+                  {[
+                    "Read instructions carefully",
+                    "Look for paraphrased information",
+                    "Check word limits for answers",
+                    "Use elimination for multiple choice",
+                    "Verify answers with passage"
+                  ].map((tip, index) => (
+                    <li key={index} className="flex items-start">
+                      <span className="flex-shrink-0 w-5 h-5 bg-white border border-pink-200 rounded-full flex items-center justify-center text-xs font-medium mr-3 mt-1">
+                        {index + 1}
+                      </span>
+                      <span className="text-gray-700">{tip}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              <div className="bg-teal-50/50 rounded-lg p-6 border border-teal-100">
+                <div className="flex items-center mb-4">
+                  <HelpCircle className="h-5 w-5 text-teal-500 mr-3" />
+                  <h3 className="text-lg font-semibold text-gray-900">Common Pitfalls</h3>
+                </div>
+                <ul className="space-y-3">
+                  {[
+                    "Don't read the entire passage first",
+                    "Avoid assumptions not in text",
+                    "Don't spend too long on one question",
+                    "Check spelling and grammar",
+                    "Don't leave questions unanswered"
+                  ].map((tip, index) => (
+                    <li key={index} className="flex items-start">
+                      <span className="flex-shrink-0 w-5 h-5 bg-white border border-teal-200 rounded-full flex items-center justify-center text-xs font-medium mr-3 mt-1">
+                        {index + 1}
+                      </span>
+                      <span className="text-gray-700">{tip}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
             </div>
           </div>
 
-          {/* Band 8-9 Section */}
-          <div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-              <span className="px-2 py-1 bg-red-100 text-red-700 text-sm font-medium rounded mr-2">Band 8-9</span>
-              Advanced Level
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <a href="#" className="block bg-white rounded-lg border border-gray-200 hover:border-red-500 hover:shadow-md transition-all duration-200">
-                <div className="p-5">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-3">Flying Tortoises</h3>
-                  <p className="text-gray-600 text-sm mb-4">Conservation efforts to save the Galápagos tortoises through aerial transport.</p>
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="flex items-center text-gray-500">
-                      <Clock className="h-4 w-4 mr-1" />
-                      30 mins
-                    </span>
-                    <span className="text-red-600 font-medium">View Answers →</span>
-                  </div>
-                </div>
-              </a>
+          {/* FAQ - Last on both */}
+          <div id="faq" className="mt-12 bg-white rounded-lg shadow-md p-6 order-6 lg:col-span-3">
+            <div className="mb-8">
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">
+                Frequently Asked Questions
+              </h2>
+              <p className="text-gray-600">Common questions about IELTS Reading test</p>
+            </div>
 
-              <a href="#" className="block bg-white rounded-lg border border-gray-200 hover:border-red-500 hover:shadow-md transition-all duration-200">
-                <div className="p-5">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-3">White Horse</h3>
-                  <p className="text-gray-600 text-sm mb-4">Ancient chalk figure carved into the English countryside and its mysteries.</p>
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="flex items-center text-gray-500">
-                      <Clock className="h-4 w-4 mr-1" />
-                      30 mins
-                    </span>
-                    <span className="text-red-600 font-medium">View Answers →</span>
-                  </div>
+            <div className="space-y-6">
+              <div className="border-b border-gray-100 pb-6">
+                <button
+                  onClick={() => setExpandedFAQ(expandedFAQ === 1 ? null : 1)}
+                  className="flex items-center justify-between w-full text-left"
+                >
+                  <h3 className="text-lg font-semibold text-gray-900">
+                    How long is the IELTS Reading test?
+                  </h3>
+                  {expandedFAQ === 1 ? (
+                    <ChevronUp className="h-5 w-5 text-gray-500" />
+                  ) : (
+                    <ChevronDown className="h-5 w-5 text-gray-500" />
+                  )}
+                </button>
+                <div className={`mt-4 text-gray-600 ${expandedFAQ === 1 ? 'block' : 'hidden'}`}>
+                  The IELTS Reading test lasts for 60 minutes. You need to read three passages and answer 40 questions in total. Time management is crucial as you have approximately 1.5 minutes per question.
                 </div>
-              </a>
+              </div>
+
+              <div className="border-b border-gray-100 pb-6">
+                <button
+                  onClick={() => setExpandedFAQ(expandedFAQ === 2 ? null : 2)}
+                  className="flex items-center justify-between w-full text-left"
+                >
+                  <h3 className="text-lg font-semibold text-gray-900">
+                    What types of questions are in the IELTS Reading test?
+                  </h3>
+                  {expandedFAQ === 2 ? (
+                    <ChevronUp className="h-5 w-5 text-gray-500" />
+                  ) : (
+                    <ChevronDown className="h-5 w-5 text-gray-500" />
+                  )}
+                </button>
+                <div className={`mt-4 text-gray-600 ${expandedFAQ === 2 ? 'block' : 'hidden'}`}>
+                  The test includes various question types such as multiple choice, true/false/not given, matching headings, sentence completion, and summary completion. Each type tests different reading skills and strategies.
+                </div>
+              </div>
+
+              <div className="border-b border-gray-100 pb-6">
+                <button
+                  onClick={() => setExpandedFAQ(expandedFAQ === 3 ? null : 3)}
+                  className="flex items-center justify-between w-full text-left"
+                >
+                  <h3 className="text-lg font-semibold text-gray-900">
+                    How can I improve my reading speed?
+                  </h3>
+                  {expandedFAQ === 3 ? (
+                    <ChevronUp className="h-5 w-5 text-gray-500" />
+                  ) : (
+                    <ChevronDown className="h-5 w-5 text-gray-500" />
+                  )}
+                </button>
+                <div className={`mt-4 text-gray-600 ${expandedFAQ === 3 ? 'block' : 'hidden'}`}>
+                  Practice skimming and scanning techniques regularly. Read academic articles, newspapers, and journals to build your reading stamina. Focus on understanding main ideas and key details rather than reading every word.
+                </div>
+              </div>
+
+              <div className="border-b border-gray-100 pb-6">
+                <button
+                  onClick={() => setExpandedFAQ(expandedFAQ === 4 ? null : 4)}
+                  className="flex items-center justify-between w-full text-left"
+                >
+                  <h3 className="text-lg font-semibold text-gray-900">
+                    Is it better to read the questions first or the passage?
+                  </h3>
+                  {expandedFAQ === 4 ? (
+                    <ChevronUp className="h-5 w-5 text-gray-500" />
+                  ) : (
+                    <ChevronDown className="h-5 w-5 text-gray-500" />
+                  )}
+                </button>
+                <div className={`mt-4 text-gray-600 ${expandedFAQ === 4 ? 'block' : 'hidden'}`}>
+                  It's generally recommended to skim the questions first to understand what information you need to look for. This helps you focus your reading and saves time by knowing what to pay attention to in the passage.
+                </div>
+              </div>
+
+              <div className="border-b border-gray-100 pb-6">
+                <button
+                  onClick={() => setExpandedFAQ(expandedFAQ === 5 ? null : 5)}
+                  className="flex items-center justify-between w-full text-left"
+                >
+                  <h3 className="text-lg font-semibold text-gray-900">
+                    What should I do if I don't know the answer?
+                  </h3>
+                  {expandedFAQ === 5 ? (
+                    <ChevronUp className="h-5 w-5 text-gray-500" />
+                  ) : (
+                    <ChevronDown className="h-5 w-5 text-gray-500" />
+                  )}
+                </button>
+                <div className={`mt-4 text-gray-600 ${expandedFAQ === 5 ? 'block' : 'hidden'}`}>
+                  Don't leave any questions unanswered. Make an educated guess based on the context and your understanding of the passage. Remember, there's no penalty for wrong answers, so it's better to attempt every question.
+                </div>
+              </div>
             </div>
           </div>
         </div>
